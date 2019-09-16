@@ -1,0 +1,17 @@
+<keys>
+    <key>
+        <name>MasterKey1</name>
+        <algorithm>4</algorithm>
+        <flags>1</flags>
+        <length>256</length>
+        <bytes>TDSZwkPoYEGUWxJug9v2U5oE6GiIim1R</bytes>
+    </key>
+
+    <key>
+        <name>MasterKey2</name>
+        <algorithm>4</algorithm>
+        <flags>1</flags>
+        <length>256</length>
+        <bytes>TDSZwkPoYEGUWxJug9v2U5oE6GiIim1R</bytes>
+    </key>
+</keys>
