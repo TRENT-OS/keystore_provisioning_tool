@@ -3,8 +3,6 @@
  *
  */
 
-#include "External.h"
-
 #include "AesNvm.h"
 #include "FileNVM.h"
 #include "SeosSpiffs.h"
