@@ -15,9 +15,6 @@ set(KEYSTORE_CONFIG_H_FILE
 
 set(NO_KERNEL_BUILD ON
     CACHE BOOL "string")
-
-set(ENABLE_LINT ON
-    CACHE BOOL "string")
 set(SEOS_LIBS ON
     CACHE BOOL "string" FORCE)
 set(SEOS_CRYPTO ON

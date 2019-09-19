@@ -2,13 +2,6 @@ cmake_minimum_required(VERSION 3.7.2)
 
 project(keystore_provisioning_tool C)
 
-#set(ENABLE_LINT ON CACHE BOOL "string")
-set(SEOS_LIBS ON CACHE BOOL "string" FORCE)
-set(SEOS_CRYPTO ON CACHE BOOL "string")
-set(SEOS_CRYPTO_IMPL_MBEDTLS ON CACHE BOOL "string")
-set(SEOS_KEYSTORE ON CACHE BOOL "string")
-set(SPIFFS ON CACHE BOOL "string" FORCE)
-
 add_executable(
     ${PROJECT_NAME}
 
