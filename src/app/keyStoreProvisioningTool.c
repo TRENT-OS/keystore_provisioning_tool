@@ -27,6 +27,7 @@
 /* Private function prototypes -------------------------------------------------------------------*/
 static bool initializeApp(SeosCrypto* cryptoApi, SeosKeyStore* localKeyStore, KeyStoreContext* keyStoreCtx);
 static void deinitializeApp(SeosCrypto* cryptoApi, SeosKeyStore* localKeyStore, KeyStoreContext* keyStoreCtx);
+static int dummyEntropyFunc(void* ctx, unsigned char* buf, size_t len);
 
 int main(int argc, char *argv[])
 {
@@ -106,7 +107,7 @@ int main(int argc, char *argv[])
 /* Private functions -------------------------------------------------------------------*/
 static bool initializeApp(SeosCrypto* cryptoApi, SeosKeyStore* localKeyStore, KeyStoreContext* keyStoreCtx)
 {
-    seos_err_t err = SeosCrypto_init(cryptoApi, malloc, free, NULL, NULL);
+    seos_err_t err = SeosCrypto_init(cryptoApi, malloc, free, dummyEntropyFunc, NULL);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCrypto_init failed with error code %d!", __func__,
@@ -140,6 +141,11 @@ static void deinitializeApp(SeosCrypto* cryptoApi, SeosKeyStore* localKeyStore, 
     SeosCrypto_deInit(&(cryptoApi->parent));
     SeosKeyStore_deInit(&(localKeyStore->parent));
     keyStoreContext_dtor(keyStoreCtx);
+}
+
+static int dummyEntropyFunc(void* ctx, unsigned char* buf, size_t len)
+{
+    return 0;
 }
 
 ///@}
