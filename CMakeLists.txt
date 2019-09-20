@@ -13,6 +13,11 @@ set(KEYSTORE_CONFIG_H_FILE
         CACHE STRING "" FORCE
 )
 
+set(PAGE_SIZE_VALUE
+        4096
+        CACHE STRING "" FORCE
+)
+
 set(NO_KERNEL_BUILD ON
     CACHE BOOL "string")
 set(SEOS_LIBS ON

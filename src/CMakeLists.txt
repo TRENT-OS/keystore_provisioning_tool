@@ -36,3 +36,5 @@ target_link_libraries(${PROJECT_NAME}
     seos_core_api
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE PAGE_SIZE=${PAGE_SIZE_VALUE})
+
