@@ -8,5 +8,5 @@ fi
 
 cd ${BUILD_DIR}
 
-cmake ../
+cmake ../src/
 make
