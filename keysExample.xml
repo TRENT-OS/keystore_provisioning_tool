@@ -1,17 +1,54 @@
+<!--
+KEY TYPE:
+    AES key             = 0
+    RSA key pair        = 1
+    DH key pair         = 2
+    SECP256R1 key pair  = 3
+
+KEY NAME:
+    String representing key name
+
+KEY FLAGS:
+    SeosCryptoKey_Flags_NONE                = 0
+    SeosCryptoKey_Flags_EXPORTABLE_RAW      = 1
+    SeosCryptoKey_Flags_EXPORTABLE_WRAPPED  = 2
+
+KEY LENGTH:
+    Number in bits
+
+KEY BYTES:
+    String representing raw key = Import key
+    0                           = Generate key
+
+-->
+
 <keys>
     <key>
-        <name>MasterKey1</name>
-        <algorithm>4</algorithm>
+        <type>0</type>
+        <name>AESKeyImported</name>
         <flags>1</flags>
         <length>256</length>
-        <bytes>TDSZwkPoYEGUWxJug9v2U5oE6GiIim1R</bytes>
+        <bytes>leoZwkPoYEGUWxJug9v2U5oE6GiIim1R</bytes>
     </key>
-
     <key>
-        <name>MasterKey2</name>
-        <algorithm>4</algorithm>
+        <type>0</type>
+        <name>AESKeyGenerated</name>
         <flags>1</flags>
         <length>256</length>
-        <bytes>TDSZwkPoYEGUWxJug9v2U5oE6GiIim1R</bytes>
+        <bytes>0</bytes>
+    </key>
+    <key>
+        <type>1</type>
+        <namePrv>RSAKeyPrv</namePrv>
+        <namePub>RSAKeyPub</namePub>
+        <flags>1</flags>
+        <length>1024</length>
+    </key>
+    <key>
+        <type>2</type>
+        <namePrv>DHKeyPrv</namePrv>
+        <namePub>DHKeyPub</namePub>
+        <flags>1</flags>
+        <length>256</length>
     </key>
 </keys>

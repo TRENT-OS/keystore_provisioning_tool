@@ -9,6 +9,10 @@ tree = ET.parse(keysXmlPath)
 root = tree.getroot()
 
 for elem in root:
-    process = Popen([toolExecutablePath, elem[0].text, elem[1].text, elem[2].text, elem[3].text, elem[4].text], stdout=PIPE)
+    params = []
+    for node in elem:
+        params.append(node.text)
+    
+    process = Popen([toolExecutablePath] + params, stdout=PIPE)
     (output, err) = process.communicate()
     print(output)
