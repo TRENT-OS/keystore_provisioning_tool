@@ -5,11 +5,34 @@ keys and ready to be used by the application.
 
 ### Build
 
-An out-of-source-folder build is the default when executing the build script 
-in the root directory of the repository - a folder build is created which contains 
-all of the artifacts.
+The build script needs to be called with 3 arguments: 
 
-    ./build.sh
+    1)path of the source directory 
+    2)path of the build directory
+    3)path of the seos_sandbox
+    
+For an example directory structure as follows
+
+```bash
+.
+|____seos_sandbox
+|____src
+|    |____repository_contents
+```
+
+    ./src/build.sh ./src ./build ./seos_sandbox
+    
+will generate the following
+
+```bash
+.
+|____seos_sandbox
+|____src
+|    |____repository_contents
+|____build
+|    |____tool_build
+|    |____sandbox_build
+```
 
 ### Usage
 
@@ -21,4 +44,4 @@ To use the tool, run the run.sh script with the following arguments:
     2) path to the provisioning tool binary
     3) path for the output binary image (for example the build dir of the mqtt_proxy_demo)
 
-    ./run.sh keysExample.xml ./build/src/keystore_provisioning_tool ../mqtt_proxy_demo/build/nvm_06
+    ./run.sh keysExample.xml ./build/tool_build/src/keystore_provisioning_tool ../mqtt_proxy_demo/build/nvm_06

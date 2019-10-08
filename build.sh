@@ -1,12 +1,23 @@
 #!/bin/bash -ue
-BUILD_DIR=./build
+
+if [ "$#" -ne 3 ]; then
+    echo "Illegal number of parameters, SOURCE_DIR, BUILD_DIR and SANDBOX_PATH needed!"
+    exit 1
+fi
+
+SOURCE_DIR=$1
+BUILD_DIR=$2
+SANDBOX_PATH=$3
 
 if [[ ! -e ${BUILD_DIR} ]]; then
-    # use subshell to configure the build
     mkdir -p ${BUILD_DIR}
 fi
 
-cd ${BUILD_DIR}
+cmake -B${BUILD_DIR}/tool_build \
+      -H${SOURCE_DIR} \
+      -DSANDBOX_SOURCE_PATH:STRING=${SANDBOX_PATH} \
+      -DSANDBOX_BUILD_PATH:STRING=${BUILD_DIR}/sandbox_build
 
-cmake ../src/
+cd ${BUILD_DIR}/tool_build
+
 make

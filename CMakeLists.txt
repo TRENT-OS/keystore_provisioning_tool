@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.7.2)
 
 set(DEBUG_CONFIG_H_FILE
-        "${CMAKE_SOURCE_DIR}/configs/include/Debug_Config.h"
+        "${CMAKE_SOURCE_DIR}/config.h"
         CACHE STRING "" FORCE
 )
 set(MEMORY_CONFIG_H_FILE
-        "${CMAKE_SOURCE_DIR}/configs/include/Memory_Config.h"
+        "${CMAKE_SOURCE_DIR}/config.h"
         CACHE STRING "" FORCE
 )
 set(KEYSTORE_CONFIG_H_FILE
-        "${CMAKE_SOURCE_DIR}/configs/include/KeyStore_Config.h"
+        "${CMAKE_SOURCE_DIR}/config.h"
         CACHE STRING "" FORCE
 )
 
@@ -31,5 +31,5 @@ set(SEOS_KEYSTORE ON
 set(SPIFFS ON
     CACHE BOOL "string" FORCE)
 
-add_subdirectory(seos_sandbox/projects/libs)
+add_subdirectory(${SANDBOX_SOURCE_PATH}/projects/libs ${SANDBOX_BUILD_PATH})
 add_subdirectory(src)
