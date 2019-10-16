@@ -200,8 +200,12 @@ exit:
 static bool initializeApp(SeosCrypto* localCrypto, SeosKeyStore* localKeyStore,
                           KeyStoreContext* keyStoreCtx)
 {
-    seos_err_t err = SeosCrypto_init(localCrypto, malloc, free, dummyEntropyFunc,
-                                     NULL);
+    const SeosCrypto_Callbacks cb = {
+        .malloc     = malloc,
+        .free       = free,
+        .entropy    = dummyEntropyFunc
+    };
+    seos_err_t err = SeosCrypto_init(localCrypto, &cb, NULL);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCrypto_init failed with error code %d!", __func__,
