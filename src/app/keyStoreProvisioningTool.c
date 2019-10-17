@@ -45,7 +45,7 @@ static void generateAndImportKeyPair(SeosCryptoCtx* cryptoCtx,
                                      SeosKeyStoreCtx* keyStoreCtx,
                                      char* keyNamePrv,
                                      char* keyNamePub,
-                                     unsigned int type,
+                                     SeosCryptoKey_PairType type,
                                      unsigned int flags,
                                      size_t keyLenBits);
 
@@ -111,7 +111,8 @@ int main(int argc, char* argv[])
             Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                                   "SeosCryptoApi_keyGenerate failed with err %d", err);
 
-            err = SeosCryptoApi_keyExport(&localCrypto.parent, keyHandle, NULL, &type, &flags, &keyAES,
+            err = SeosCryptoApi_keyExport(&localCrypto.parent, keyHandle, NULL, &type,
+                                          &flags, &keyAES,
                                           &keySize);
             Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                                   "SeosCryptoApi_keyExport failed with err %d", err);
@@ -166,7 +167,8 @@ int main(int argc, char* argv[])
                                      &(localKeyStore.parent),
                                      keyNamePrv,
                                      keyNamePub,
-                                     SeosCryptoKey_PairType_DH,                                     keyFlags,
+                                     SeosCryptoKey_PairType_DH,
+                                     keyFlags,
                                      keyLenBits);
             break;
 
@@ -177,7 +179,8 @@ int main(int argc, char* argv[])
                                      &(localKeyStore.parent),
                                      keyNamePrv,
                                      keyNamePub,
-                                     SeosCryptoKey_PairType_SECP256R1,                                     keyFlags,
+                                     SeosCryptoKey_PairType_SECP256R1,
+                                     keyFlags,
                                      keyLenBits);
             break;
 
@@ -244,7 +247,7 @@ static void generateAndImportKeyPair(SeosCryptoCtx* cryptoCtx,
                                      SeosKeyStoreCtx* keyStoreCtx,
                                      char* keyNamePrv,
                                      char* keyNamePub,
-                                     unsigned int type,
+                                     SeosCryptoKey_PairType pairType,
                                      unsigned int flags,
                                      size_t keyLenBits)
 {
@@ -254,18 +257,21 @@ static void generateAndImportKeyPair(SeosCryptoCtx* cryptoCtx,
     char keyPubBuf[2048];
     size_t keySizePrv = sizeof(keyPrvBuf);
     size_t keySizePub = sizeof(keyPubBuf);
+    SeosCryptoKey_Type type;
 
     seos_err_t err = SEOS_ERROR_GENERIC;
     err = SeosCryptoApi_keyGeneratePair(cryptoCtx, &keyHandlePrv, &keyHandlePub,
-                                        type, flags, flags, keyLenBits);
+                                        pairType, flags, flags, keyLenBits);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_keyGenerate failed with err %d", err);
 
-    err = SeosCryptoApi_keyExport(cryptoCtx, keyHandlePrv, NULL,  &type, &flags, keyPrvBuf,
+    err = SeosCryptoApi_keyExport(cryptoCtx, keyHandlePrv, NULL,  &type, &flags,
+                                  keyPrvBuf,
                                   &keySizePrv);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_keyExport failed with err %d", err);
-    err = SeosCryptoApi_keyExport(cryptoCtx, keyHandlePub, NULL,  &type, &flags, keyPubBuf,
+    err = SeosCryptoApi_keyExport(cryptoCtx, keyHandlePub, NULL,  &type, &flags,
+                                  keyPubBuf,
                                   &keySizePub);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_keyExport failed with err %d", err);
