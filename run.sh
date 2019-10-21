@@ -1,12 +1,33 @@
 #!/bin/bash -ue
 
-KEYS_XML_INPUT=$1
-PROVISIONING_TOOL=$2
-OUTPUT_PATH=$3
+BUILD_SCRIPT_DIR=$(cd `dirname $0` && pwd)
 
-# calling the python script which parses the xml with key info and 
+if [ "$#" -ne 3 ]; then
+    echo "Illegal number of parameters, KEYSTORE_CONFIG_XML, PROVISIONING_TOOL_BIN, OUTPUT_IMAGE needed!"
+    exit 1
+fi
+
+# XML config file with keystore content
+KEYSTORE_CONFIG_XML=$1
+
+# compiled binary of the provisioning tool
+PROVISIONING_TOOL_BIN=$2
+
+# name and location of the keystore image
+OUTPUT_IMAGE=$3
+
+
+
+# call a python script that parses the xml config file with key info and then
 # calls the provisioning tool with proper arguments
-python ./src/xmlParser.py $KEYS_XML_INPUT $PROVISIONING_TOOL
+python \
+    ${BUILD_SCRIPT_DIR}/xmlParser.py \
+    ${KEYSTORE_CONFIG_XML} \
+    ${PROVISIONING_TOOL_BIN}
 
-# moves the created binary to the desired path passed as an argument
-mv ./nvm_06 $OUTPUT_PATH
+# move the created keystore image to the desired location
+if [ -e ${OUTPUT_IMAGE} ]; then
+    echo "deleting existing keystore image"
+    rm ${OUTPUT_IMAGE}
+fi
+mv nvm_06 ${OUTPUT_IMAGE}

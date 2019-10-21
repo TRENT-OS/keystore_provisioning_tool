@@ -1,23 +1,39 @@
 #!/bin/bash -ue
 
-if [ "$#" -ne 3 ]; then
-    echo "Illegal number of parameters, SOURCE_DIR, BUILD_DIR and SANDBOX_PATH needed!"
+BUILD_SCRIPT_DIR=$(cd `dirname $0` && pwd)
+
+# by convention, the build always happens in a dedicated sub folder of the
+# current folder where the script is invokend in
+BUILD_DIR=build
+
+if [ "$#" -ne 1 ]; then
+    echo "Illegal number of parameters, SANDBOX_PATH needed!"
     exit 1
 fi
+SANDBOX_PATH=$1
 
-SOURCE_DIR=$1
-BUILD_DIR=$2
-SANDBOX_PATH=$3
-
-if [[ ! -e ${BUILD_DIR} ]]; then
-    mkdir -p ${BUILD_DIR}
+if [[ -e ${BUILD_DIR} ]] && [[ ! -e ${BUILD_DIR}/rules.ninja ]]; then
+    echo "clean broken build folder and re-initialize it"
+    rm -rf ${BUILD_DIR}
 fi
 
-cmake -B${BUILD_DIR}/tool_build \
-      -H${SOURCE_DIR} \
-      -DSANDBOX_SOURCE_PATH:STRING=${SANDBOX_PATH} \
-      -DSANDBOX_BUILD_PATH:STRING=${BUILD_DIR}/sandbox_build
+if [[ ! -e ${BUILD_DIR} ]]; then
+    # use subshell to configure the build
+    (
+        mkdir -p ${BUILD_DIR}
+        cd ${BUILD_DIR}
 
-cd ${BUILD_DIR}/tool_build
+        CMAKE_PARAMS=(
+            -DSANDBOX_SOURCE_PATH:STRING=${SANDBOX_PATH}
+            -DSANDBOX_BUILD_PATH:STRING=sandbox_build
+        )
 
-make
+        cmake ${CMAKE_PARAMS[@]} -G Ninja ${BUILD_SCRIPT_DIR}
+    )
+fi
+
+# build in subshell
+(
+    cd ${BUILD_DIR}
+    ninja
+)
