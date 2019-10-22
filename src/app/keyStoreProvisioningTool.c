@@ -122,6 +122,8 @@ int main(int argc, char* argv[])
             Debug_LOG_DEBUG("\nImporting AES key:\n   key name = %s\n   key length = %u\n   key flags = %u\n   key bytes = %s\n\n",
                             keyName, keyLenBits, keyFlags, keyBytes);
 
+            keyData.type = SeosCryptoKey_Type_AES;
+            keyData.attribs.flags = keyFlags;
             memcpy(keyData.data.aes.bytes, keyBytes, LEN_BITS_TO_BYTES(keyLenBits));
             keyData.data.aes.len = LEN_BITS_TO_BYTES(keyLenBits);
         }
