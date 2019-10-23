@@ -28,7 +28,7 @@ set(SEOS_CRYPTO_IMPL_MBEDTLS ON
     CACHE BOOL "string")
 set(SEOS_KEYSTORE ON
     CACHE BOOL "string")
-set(SPIFFS ON
+set(SEOS_FILESYSTEM_SPIFFS ON
     CACHE BOOL "string" FORCE)
 
 add_subdirectory(${SANDBOX_SOURCE_PATH}/projects/libs ${SANDBOX_BUILD_PATH})
