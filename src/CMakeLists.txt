@@ -32,7 +32,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     seos_libs
     seos_crypto
-    seos_filesystem_spiffs
+    seos_filesystem_spiffs_legacy
     seos_keystore
     seos_core_api
 )

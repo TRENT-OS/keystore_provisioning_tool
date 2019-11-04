@@ -19,17 +19,18 @@ set(PAGE_SIZE_VALUE
 )
 
 set(NO_KERNEL_BUILD ON
-    CACHE BOOL "string")
+    CACHE BOOL "")
+
 set(SEOS_LIBS ON
-    CACHE BOOL "string" FORCE)
+    CACHE BOOL "")
 set(SEOS_CRYPTO ON
-    CACHE BOOL "string")
+    CACHE BOOL "")
 set(SEOS_CRYPTO_IMPL_MBEDTLS ON
-    CACHE BOOL "string")
+    CACHE BOOL "")
+set(SEOS_FILESYSTEM_SPIFFS_LEGACY ON
+    CACHE BOOL "")
 set(SEOS_KEYSTORE ON
-    CACHE BOOL "string")
-set(SEOS_FILESYSTEM_SPIFFS ON
-    CACHE BOOL "string" FORCE)
+    CACHE BOOL "")
 
 add_subdirectory(${SANDBOX_SOURCE_PATH}/projects/libs ${SANDBOX_BUILD_PATH})
 add_subdirectory(src)
