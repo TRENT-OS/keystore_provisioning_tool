@@ -43,11 +43,11 @@ target_compile_definitions(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
+    seos_core_api
     seos_libs
     seos_crypto
     seos_filesystem_spiffs_legacy
     seos_keystore
-    seos_core_api
 )
 
 
