@@ -18,8 +18,7 @@ set(SEOS_KEYSTORE ON CACHE BOOL "")
 
 add_subdirectory(${SANDBOX_SOURCE_PATH}/projects/libs sandbox_build)
 
-add_executable(
-    ${PROJECT_NAME}
+add_executable(${PROJECT_NAME}
     src/keyStoreProvisioningTool.c
     src/FileNVM.c
     src/KeyStoreInit.c
