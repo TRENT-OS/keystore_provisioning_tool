@@ -1,22 +1,29 @@
 cmake_minimum_required(VERSION 3.7.2)
 
-project(keystore_provisioning_tool C)
-
-set(DEBUG_CONFIG_H_FILE "${CMAKE_SOURCE_DIR}/config.h" CACHE STRING "" FORCE)
-set(MEMORY_CONFIG_H_FILE "${CMAKE_SOURCE_DIR}/config.h" CACHE STRING "" FORCE)
-set(KEYSTORE_CONFIG_H_FILE "${CMAKE_SOURCE_DIR}/config.h" CACHE STRING "" FORCE)
+#-------------------------------------------------------------------------------
+# configure and use sandbox
 
 set(PAGE_SIZE_VALUE 4096 CACHE STRING "" FORCE)
-
 set(NO_KERNEL_BUILD ON CACHE BOOL "")
 
-set(SEOS_LIBS ON CACHE BOOL "")
-set(SEOS_CRYPTO ON CACHE BOOL "")
-set(SEOS_CRYPTO_IMPL_MBEDTLS ON CACHE BOOL "")
-set(SEOS_FILESYSTEM_SPIFFS_LEGACY ON CACHE BOOL "")
-set(SEOS_KEYSTORE ON CACHE BOOL "")
+set(SEOS_SANDBOX_PASSIVE_CMAKE ON)
+include(${SANDBOX_SOURCE_PATH}/CMakeLists.txt)
+
+seos_set_config_file(config.h)
+
+seos_use_libs(
+    SEOS_LIBS
+    SEOS_CRYPTO
+    SEOS_CRYPTO_IMPL_MBEDTLS
+    SEOS_FILESYSTEM_SPIFFS_LEGACY
+    SEOS_KEYSTORE
+)
 
 add_subdirectory(${SANDBOX_SOURCE_PATH}/projects/libs sandbox_build)
+
+#-------------------------------------------------------------------------------
+
+project(keystore_provisioning_tool C)
 
 add_executable(${PROJECT_NAME}
     src/keyStoreProvisioningTool.c
