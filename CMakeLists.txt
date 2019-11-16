@@ -32,10 +32,7 @@ target_compile_options(${PROJECT_NAME}
 )
 
 target_compile_definitions(${PROJECT_NAME}
-    #PUBLIC
-    #    ${PUBLIC_TARGET_COMPILE_DEFINITIONS}
     PRIVATE
-    #    ${PRIVATE_TARGET_COMPILE_DEFINITIONS}
         PAGE_SIZE=${PAGE_SIZE_VALUE}
 )
 
