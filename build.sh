@@ -3,7 +3,7 @@
 BUILD_SCRIPT_DIR=$(cd `dirname $0` && pwd)
 
 # by convention, the build always happens in a dedicated sub folder of the
-# current folder where the script is invokend in
+# current folder where the script is invoked in
 BUILD_DIR=build
 
 if [ "$#" -ne 1 ]; then
