@@ -16,7 +16,7 @@ set(SEOS_CRYPTO_IMPL_MBEDTLS ON CACHE BOOL "")
 set(SEOS_FILESYSTEM_SPIFFS_LEGACY ON CACHE BOOL "")
 set(SEOS_KEYSTORE ON CACHE BOOL "")
 
-add_subdirectory(${SANDBOX_SOURCE_PATH}/projects/libs ${SANDBOX_BUILD_PATH})
+add_subdirectory(${SANDBOX_SOURCE_PATH}/projects/libs sandbox_build)
 
 add_executable(
     ${PROJECT_NAME}

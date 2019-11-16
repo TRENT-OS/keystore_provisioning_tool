@@ -25,7 +25,6 @@ if [[ ! -e ${BUILD_DIR} ]]; then
 
         CMAKE_PARAMS=(
             -DSANDBOX_SOURCE_PATH:STRING=${SANDBOX_PATH}
-            -DSANDBOX_BUILD_PATH:STRING=sandbox_build
         )
 
         cmake ${CMAKE_PARAMS[@]} -G Ninja ${BUILD_SCRIPT_DIR}
