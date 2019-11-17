@@ -20,7 +20,7 @@ OUTPUT_IMAGE=$3
 
 # call a python script that parses the xml config file with key info and then
 # calls the provisioning tool with proper arguments
-python \
+python3 \
     ${BUILD_SCRIPT_DIR}/xmlParser.py \
     ${KEYSTORE_CONFIG_XML} \
     ${PROVISIONING_TOOL_BIN}
