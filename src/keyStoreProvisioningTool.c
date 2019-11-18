@@ -216,7 +216,7 @@ static bool initializeApp(SeosCrypto* localCrypto, SeosKeyStore* localKeyStore,
 
     err = SeosKeyStore_init(localKeyStore,
                             keyStoreCtx->fileStreamFactory,
-                            localCrypto,
+                            SeosCrypto_TO_SEOS_CRYPTO_CTX(localCrypto),
                             KEY_STORE_INSTANCE_NAME);
 
     if (err != SEOS_SUCCESS)
