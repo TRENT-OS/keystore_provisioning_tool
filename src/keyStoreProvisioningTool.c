@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
             Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                                   "SeosCryptoApi_Key_generate failed with err %d", err);
 
-            err = SeosCryptoApi_Key_export(&localCrypto.parent, keyHandle, NULL, &keyData);
+            err = SeosCryptoApi_Key_export(&keyHandle, NULL, &keyData);
             Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                                   "SeosCryptoApi_Key_export failed with err %d", err);
         }
@@ -257,12 +257,11 @@ static void generateAndImportKeyPair(SeosCryptoApi_Context* cryptoCtx,
     err = SeosCryptoApi_Key_generate(cryptoCtx, &keyHandlePrv, spec);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_Key_generate failed with err %d", err);
-    err = SeosCryptoApi_Key_makePublic(cryptoCtx, &keyHandlePub, keyHandlePrv,
-                                      &spec->key.attribs);
+    err = SeosCryptoApi_Key_makePublic(&keyHandlePub, &keyHandlePrv, &spec->key.attribs);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_Key_generate failed with err %d", err);
 
-    err = SeosCryptoApi_Key_export(cryptoCtx, keyHandlePrv, NULL,  &keyData);
+    err = SeosCryptoApi_Key_export(&keyHandlePrv, NULL,  &keyData);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_Key_export failed with err %d", err);
     err = SeosKeyStoreApi_importKey(keyStoreCtx, keyNamePrv, &keyData,
@@ -270,7 +269,7 @@ static void generateAndImportKeyPair(SeosCryptoApi_Context* cryptoCtx,
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosKeyStoreApi_importKey failed with err %d", err);
 
-    err = SeosCryptoApi_Key_export(cryptoCtx, keyHandlePub, NULL, &keyData);
+    err = SeosCryptoApi_Key_export(&keyHandlePub, NULL, &keyData);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_Key_export failed with err %d", err);
     err = SeosKeyStoreApi_importKey(keyStoreCtx, keyNamePub, &keyData,
