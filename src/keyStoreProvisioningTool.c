@@ -17,7 +17,6 @@
 #include "SeosKeyStoreApi.h"
 
 #include "SeosCryptoApi.h"
-#include "SeosCryptoLib.h"
 
 #include "KeyStoreInit.h"
 
@@ -47,12 +46,13 @@ ProvisioningTool_importType;
 #define LEN_BITS_TO_BYTES(lenBits)  (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
 
 /* Private function prototypes -------------------------------------------------------------------*/
-static bool initializeApp(SeosCryptoLib* localCrypto, SeosKeyStore* localKeyStore,
+static bool initializeApp(SeosCryptoApi* localCrypto,
+                          SeosKeyStore* localKeyStore,
                           KeyStoreContext* keyStoreCtx);
-static void deinitializeApp(SeosCryptoLib* localCrypto,
+static void deinitializeApp(SeosCryptoApi* localCrypto,
                             SeosKeyStore* localKeyStore, KeyStoreContext* keyStoreCtx);
 static int dummyEntropyFunc(void* ctx, unsigned char* buf, size_t len);
-static void generateAndImportKeyPair(SeosCryptoApi_Context* cryptoCtx,
+static void generateAndImportKeyPair(SeosCryptoApi* cryptoCtx,
                                      SeosKeyStoreCtx* keyStoreCtx,
                                      char* keyNamePrv,
                                      char* keyNamePub,
@@ -69,7 +69,7 @@ static SeosCryptoApi_Key_Spec keySpec =
 /* Application -------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-    SeosCryptoLib localCrypto;
+    SeosCryptoApi localCrypto;
     SeosKeyStore localKeyStore;
     KeyStoreContext keyStoreCtx;
 
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
             keySpec.key.type = SeosCryptoApi_Key_TYPE_AES;
             keySpec.key.attribs.flags = keyFlags;
             keySpec.key.params.bits = keyLenBits;
-            err = SeosCryptoApi_Key_generate(&localCrypto.parent, &keyHandle, &keySpec);
+            err = SeosCryptoApi_Key_generate(&localCrypto, &keyHandle, &keySpec);
             Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                                   "SeosCryptoApi_Key_generate failed with err %d", err);
 
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
             break;
         }
 
-        generateAndImportKeyPair(&localCrypto.parent,
+        generateAndImportKeyPair(&localCrypto,
                                  &(localKeyStore.parent),
                                  keyNamePrv,
                                  keyNamePub,
@@ -193,16 +193,27 @@ exit:
 }
 
 /* Private functions -------------------------------------------------------------------*/
-static bool initializeApp(SeosCryptoLib* localCrypto, SeosKeyStore* localKeyStore,
+static bool initializeApp(SeosCryptoApi* localCrypto,
+                          SeosKeyStore* localKeyStore,
                           KeyStoreContext* keyStoreCtx)
 {
-    const SeosCryptoApi_Callbacks cb =
+    seos_err_t err;
+    SeosCryptoApi_Config cfgLocal =
     {
-        .malloc     = malloc,
-        .free       = free,
-        .entropy    = dummyEntropyFunc
+        .mode = SeosCryptoApi_Mode_LIBRARY,
+        .mem = {
+            .malloc = malloc,
+            .free = free,
+        },
+        .impl.lib.rng = {
+            .entropy = dummyEntropyFunc,
+            .context = NULL
+        }
     };
-    seos_err_t err = SeosCryptoLib_init(localCrypto, &cb, NULL);
+
+    // Open local instance of API
+    err = SeosCryptoApi_init(localCrypto, &cfgLocal);
+    Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS, "err %d", err);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoLib_init failed with error code %d!", __func__,
@@ -218,7 +229,7 @@ static bool initializeApp(SeosCryptoLib* localCrypto, SeosKeyStore* localKeyStor
 
     err = SeosKeyStore_init(localKeyStore,
                             keyStoreCtx->fileStreamFactory,
-                            SeosCryptoLib_TO_SEOS_CRYPTO_CTX(localCrypto),
+                            localCrypto,
                             KEY_STORE_INSTANCE_NAME);
 
     if (err != SEOS_SUCCESS)
@@ -231,10 +242,10 @@ static bool initializeApp(SeosCryptoLib* localCrypto, SeosKeyStore* localKeyStor
     return true;
 }
 
-static void deinitializeApp(SeosCryptoLib* localCrypto,
+static void deinitializeApp(SeosCryptoApi* localCrypto,
                             SeosKeyStore* localKeyStore, KeyStoreContext* keyStoreCtx)
 {
-    SeosCryptoLib_free(&(localCrypto->parent));
+    SeosCryptoApi_free(localCrypto);
     SeosKeyStore_deInit(&(localKeyStore->parent));
     keyStoreContext_dtor(keyStoreCtx);
 }
@@ -244,7 +255,7 @@ static int dummyEntropyFunc(void* ctx, unsigned char* buf, size_t len)
     return 0;
 }
 
-static void generateAndImportKeyPair(SeosCryptoApi_Context* cryptoCtx,
+static void generateAndImportKeyPair(SeosCryptoApi* cryptoCtx,
                                      SeosKeyStoreCtx* keyStoreCtx,
                                      char* keyNamePrv,
                                      char* keyNamePub,
@@ -257,7 +268,8 @@ static void generateAndImportKeyPair(SeosCryptoApi_Context* cryptoCtx,
     err = SeosCryptoApi_Key_generate(cryptoCtx, &keyHandlePrv, spec);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_Key_generate failed with err %d", err);
-    err = SeosCryptoApi_Key_makePublic(&keyHandlePub, &keyHandlePrv, &spec->key.attribs);
+    err = SeosCryptoApi_Key_makePublic(&keyHandlePub, &keyHandlePrv,
+                                       &spec->key.attribs);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_Key_generate failed with err %d", err);
 
