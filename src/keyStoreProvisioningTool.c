@@ -9,6 +9,7 @@
  * Copyright (C) 2019, Hensoldt Cyber GmbH
  */
 #include <stdio.h>
+#include <stdbool.h>
 #include "LibDebug/Debug.h"
 
 #include "SeosKeyStore.h"
@@ -76,7 +77,7 @@ int main(int argc, char* argv[])
     seos_err_t err = SEOS_ERROR_GENERIC;
     unsigned int importType = atoi(argv[1]);
 
-    unsigned int keyFlags = 0;
+    bool keyExportable = false;
     unsigned int keyLenBits = 0;
 
     /********************************** Initialization ************************************/
@@ -96,7 +97,7 @@ int main(int argc, char* argv[])
             goto exit;
         }
 
-        keyFlags = atoi(argv[3]);
+        keyExportable = atoi(argv[3]);
         keyLenBits = atoi(argv[4]);
 
         char* keyBytes = argv[5];
@@ -105,27 +106,27 @@ int main(int argc, char* argv[])
         if (strlen(keyBytes) == KEY_BYTES_EMPTY_STRING_LEN
             && !strncmp(keyBytes, KEY_BYTES_EMPTY_STRING, KEY_BYTES_EMPTY_STRING_LEN))
         {
-            Debug_LOG_DEBUG("\nGenerating AES key:\n   key name = %s\n   key length = %u\n   key flags = %u\n\n",
-                            keyName, keyLenBits, keyFlags);
+            Debug_LOG_DEBUG("\nGenerating AES key:\n   key name = %s\n   key length = %u\n   key exportable = %u\n\n",
+                            keyName, keyLenBits, keyExportable);
 
             keySpec.key.type = SeosCryptoApi_Key_TYPE_AES;
-            keySpec.key.attribs.flags = keyFlags;
+            keySpec.key.attribs.exportable = keyExportable;
             keySpec.key.params.bits = keyLenBits;
             err = SeosCryptoApi_Key_generate(&localCrypto, &keyHandle, &keySpec);
             Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                                   "SeosCryptoApi_Key_generate failed with err %d", err);
 
-            err = SeosCryptoApi_Key_export(&keyHandle, NULL, &keyData);
+            err = SeosCryptoApi_Key_export(&keyHandle, &keyData);
             Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                                   "SeosCryptoApi_Key_export failed with err %d", err);
         }
         else
         {
-            Debug_LOG_DEBUG("\nImporting AES key:\n   key name = %s\n   key length = %u\n   key flags = %u\n   key bytes = %s\n\n",
-                            keyName, keyLenBits, keyFlags, keyBytes);
+            Debug_LOG_DEBUG("\nImporting AES key:\n   key name = %s\n   key length = %u\n   key exportable = %u\n   key bytes = %s\n\n",
+                            keyName, keyLenBits, keyExportable, keyBytes);
 
             keyData.type = SeosCryptoApi_Key_TYPE_AES;
-            keyData.attribs.flags = keyFlags;
+            keyData.attribs.exportable = keyExportable;
             memcpy(keyData.data.aes.bytes, keyBytes, LEN_BITS_TO_BYTES(keyLenBits));
             keyData.data.aes.len = LEN_BITS_TO_BYTES(keyLenBits);
         }
@@ -144,33 +145,33 @@ int main(int argc, char* argv[])
             goto exit;
         }
 
-        keyFlags = atoi(argv[4]);
+        keyExportable = atoi(argv[4]);
         keyLenBits = atoi(argv[5]);
 
         char* keyNamePrv = argv[2];
         char* keyNamePub = argv[3];
 
         keySpec.type = SeosCryptoApi_Key_SPECTYPE_BITS;
-        keySpec.key.attribs.flags = keyFlags;
+        keySpec.key.attribs.exportable = keyExportable;
         keySpec.key.params.bits = keyLenBits;
 
         switch (importType)
         {
         case RSA_KEY_PAIR:
-            Debug_LOG_DEBUG("\nGenerating RSA key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key flags = %u\n\n",
-                            keyNamePrv, keyNamePub, keyLenBits, keyFlags);
+            Debug_LOG_DEBUG("\nGenerating RSA key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key exportable = %u\n\n",
+                            keyNamePrv, keyNamePub, keyLenBits, keyExportable);
             keySpec.key.type = SeosCryptoApi_Key_TYPE_RSA_PRV;
             break;
 
         case DH_KEY_PAIR:
-            Debug_LOG_DEBUG("\nGenerating DH key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key flags = %u\n\n",
-                            keyNamePrv, keyNamePub, keyLenBits, keyFlags);
+            Debug_LOG_DEBUG("\nGenerating DH key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key exportable = %u\n\n",
+                            keyNamePrv, keyNamePub, keyLenBits, keyExportable);
             keySpec.key.type = SeosCryptoApi_Key_TYPE_DH_PRV;
             break;
 
         case SECP256R1_KEY_PAIR:
-            Debug_LOG_DEBUG("\nGenerating SECP256r1 key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key flags = %u\n\n",
-                            keyNamePrv, keyNamePub, keyLenBits, keyFlags);
+            Debug_LOG_DEBUG("\nGenerating SECP256r1 key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key exportable = %u\n\n",
+                            keyNamePrv, keyNamePub, keyLenBits, keyExportable);
             keySpec.key.type = SeosCryptoApi_Key_TYPE_SECP256R1_PRV;
             break;
 
@@ -273,7 +274,7 @@ static void generateAndImportKeyPair(SeosCryptoApi* cryptoCtx,
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_Key_generate failed with err %d", err);
 
-    err = SeosCryptoApi_Key_export(&keyHandlePrv, NULL,  &keyData);
+    err = SeosCryptoApi_Key_export(&keyHandlePrv, &keyData);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_Key_export failed with err %d", err);
     err = SeosKeyStoreApi_importKey(keyStoreCtx, keyNamePrv, &keyData,
@@ -281,7 +282,7 @@ static void generateAndImportKeyPair(SeosCryptoApi* cryptoCtx,
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosKeyStoreApi_importKey failed with err %d", err);
 
-    err = SeosCryptoApi_Key_export(&keyHandlePub, NULL, &keyData);
+    err = SeosCryptoApi_Key_export(&keyHandlePub, &keyData);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosCryptoApi_Key_export failed with err %d", err);
     err = SeosKeyStoreApi_importKey(keyStoreCtx, keyNamePub, &keyData,
