@@ -19,7 +19,7 @@ seos_use_libs(
     SEOS_KEYSTORE
 )
 
-add_subdirectory(${SANDBOX_SOURCE_PATH}/projects/libs sandbox_build)
+add_subdirectory(${SEOS_LIBS_DIR} sandbox_build)
 
 #-------------------------------------------------------------------------------
 
