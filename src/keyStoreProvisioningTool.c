@@ -21,6 +21,8 @@
 
 #include "KeyStoreInit.h"
 
+#include "keystore_config.h"
+
 /* Defines -------------------------------------------------------------------*/
 #define NVM_CHANNEL_NUMBER          (6)
 #define KEY_STORE_INSTANCE_NAME     "KeyStore1"
@@ -222,7 +224,14 @@ static bool initializeApp(SeosCryptoApiH* hCrypto,
         return false;
     }
 
-    if (!keyStoreContext_ctor(keyStoreCtx))
+    static const SeosCryptoApi_Key_Data masterKeyData =
+    {
+        .type = SeosCryptoApi_Key_TYPE_AES,
+        .data.aes.len = sizeof(KEYSTORE_KEY_AES)-1,
+        .data.aes.bytes = KEYSTORE_KEY_AES
+    };
+
+    if (!keyStoreContext_ctor(keyStoreCtx, KEYSTORE_IV, &masterKeyData))
     {
         Debug_LOG_ERROR("%s: Failed to initialize the keystore context!", __func__);
         return false;

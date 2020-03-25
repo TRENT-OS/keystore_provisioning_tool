@@ -9,6 +9,8 @@ set(NO_KERNEL_BUILD ON CACHE BOOL "")
 set(SEOS_SANDBOX_PASSIVE_CMAKE ON)
 include(${SANDBOX_SOURCE_PATH}/CMakeLists.txt)
 
+SET(SEOS_LIBS_KEYSTORE "${SEOS_LIBS_DIR}/seos_keystore")
+
 seos_set_config_file(config.h)
 
 seos_use_libs(
@@ -29,6 +31,12 @@ add_executable(${PROJECT_NAME}
     src/keyStoreProvisioningTool.c
     src/FileNVM.c
     src/KeyStoreInit.c
+    ${SEOS_LIBS_KEYSTORE}/src/AesNvm.c
+)
+
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${SEOS_LIBS_KEYSTORE}/src
 )
 
 target_compile_options(${PROJECT_NAME}

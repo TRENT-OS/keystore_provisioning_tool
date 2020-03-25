@@ -9,7 +9,10 @@
 #define NVM_PARTITION_NAME      "nvm_06"
 
 /* Public functions -----------------------------------------------------------*/
-bool keyStoreContext_ctor(KeyStoreContext* keyStoreCtx)
+bool keyStoreContext_ctor(
+    KeyStoreContext*              keyStoreCtx,
+    const void*                   startIv,
+    const SeosCryptoApi_Key_Data* masterKeyData)
 {
     // create and initialize an nvm instance that writes directly to a file
     if (!FileNVM_ctor(&(keyStoreCtx->fileNvm), NVM_PARTITION_NAME))
@@ -19,7 +22,9 @@ bool keyStoreContext_ctor(KeyStoreContext* keyStoreCtx)
     }
 
     if (!AesNvm_ctor(&(keyStoreCtx->aesNvm),
-                     FileNVM_TO_NVM(&(keyStoreCtx->fileNvm))))
+                     FileNVM_TO_NVM(&(keyStoreCtx->fileNvm)),
+                     startIv,
+                     masterKeyData))
     {
         Debug_LOG_ERROR("%s: Failed to initialize AesNvm!", __func__);
         return false;
@@ -49,7 +54,7 @@ bool keyStoreContext_ctor(KeyStoreContext* keyStoreCtx)
                         __func__);
         return false;
     }
-    
+
     return true;
 }
 

@@ -22,7 +22,9 @@ typedef struct KeyStoreContext
 
 bool
 keyStoreContext_ctor(
-    KeyStoreContext* keyStoreCtx);
+    KeyStoreContext*               keyStoreCtx,
+    const void*                    startIv,
+    const SeosCryptoApi_Key_Data*  masterKeyData);
 
 
 bool
