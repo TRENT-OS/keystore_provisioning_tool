@@ -224,7 +224,7 @@ static bool initializeApp(SeosCryptoApiH* hCrypto,
 
     if (!keyStoreContext_ctor(keyStoreCtx))
     {
-        Debug_LOG_ERROR("%s: Failed to initialize the test!", __func__);
+        Debug_LOG_ERROR("%s: Failed to initialize the keystore context!", __func__);
         return false;
     }
 
