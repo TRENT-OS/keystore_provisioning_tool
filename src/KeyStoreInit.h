@@ -19,5 +19,12 @@ typedef struct KeyStoreContext
     SeosKeyStore keyStore;
 } KeyStoreContext;
 
-bool keyStoreContext_ctor(KeyStoreContext* keyStoreCtx);
-bool keyStoreContext_dtor(KeyStoreContext* keyStoreCtx);
+
+bool
+keyStoreContext_ctor(
+    KeyStoreContext* keyStoreCtx);
+
+
+bool
+keyStoreContext_dtor(
+    KeyStoreContext* keyStoreCtx);
