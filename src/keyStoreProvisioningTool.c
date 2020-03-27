@@ -332,6 +332,14 @@ int main(
 
     SeosKeyStoreCtx* keyStoreCtx = &(keyStore.parent);
 
+    // argv[0] is the binary name, argv[1] would be the first parameter.
+    if (argc < 2)
+    {
+        Debug_LOG_ERROR("no arguments specified");
+        exit_code = -1;
+        goto exit;
+    }
+
     unsigned int importType = atoi(argv[1]);
     if (importType == AES_KEY)
     {
