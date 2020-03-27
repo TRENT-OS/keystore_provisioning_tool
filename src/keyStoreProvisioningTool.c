@@ -315,6 +315,8 @@ int main(
     int    argc,
     char*  argv[])
 {
+    int exit_code = 0;
+
     OS_Crypto_Handle_t hCrypto;
     SeosKeyStore keyStore;
     KeyStoreContext ctx;
@@ -325,7 +327,7 @@ int main(
     {
         Debug_LOG_ERROR("%s: initializeApp failed with error code %d!",
                         __func__, ret);
-        return 0;
+        return -1;
     }
 
     SeosKeyStoreCtx* keyStoreCtx = &(keyStore.parent);
@@ -337,6 +339,7 @@ int main(
         {
             Debug_LOG_ERROR("%u is an invalid number of arguments to import/generate an aes key! Required %u",
                             argc, NUM_OF_ARGS_AES);
+            exit_code = -1;
             goto exit;
         }
 
@@ -356,6 +359,7 @@ int main(
         {
             Debug_LOG_ERROR("%s: create_and_import_aes_key failed with error code %d!",
                             __func__, ret);
+            exit_code = -1;
             goto exit;
         }
     }
@@ -385,6 +389,7 @@ int main(
         {
             Debug_LOG_ERROR("%s: create_and_import_key_pair failed with error code %d!",
                             __func__, ret);
+            exit_code = -1;
             goto exit;
         }
     }
@@ -392,7 +397,7 @@ int main(
 exit:
     deinitializeApp(hCrypto, &keyStore, &ctx);
 
-    return 0;
+    return exit_code;
 }
 
 ///@}
