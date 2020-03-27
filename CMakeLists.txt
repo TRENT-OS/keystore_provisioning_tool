@@ -30,7 +30,6 @@ project(keystore_provisioning_tool C)
 add_executable(${PROJECT_NAME}
     src/keyStoreProvisioningTool.c
     src/FileNVM.c
-    src/KeyStoreInit.c
     ${SEOS_LIBS_KEYSTORE}/src/AesNvm.c
 )
 

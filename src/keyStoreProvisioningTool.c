@@ -19,11 +19,18 @@
 
 #include "OS_Crypto.h"
 
-#include "KeyStoreInit.h"
+#include "AesNvm.h"
+#include "FileNVM.h"
+#include "SeosSpiffs.h"
+#include "SpiffsFileStream.h"
+#include "SpiffsFileStreamFactory.h"
 
 #include "config.h"
 
 /* Defines -------------------------------------------------------------------*/
+#define NVM_PARTITION_SIZE          (1024*128)
+#define NVM_PARTITION_NAME          "nvm_06"
+
 #define NVM_CHANNEL_NUMBER          (6)
 #define KEY_STORE_INSTANCE_NAME     "KeyStore1"
 
@@ -46,6 +53,18 @@ typedef enum
 ProvisioningTool_importType;
 
 
+typedef struct {
+    OS_Crypto_Handle_t  hCrypto;
+
+    SeosKeyStore        keyStore;
+
+    FileNVM             fileNvm;
+    AesNvm              aesNvm;
+    SeosSpiffs          fs;
+    FileStreamFactory*  fileStreamFactory;
+} app_ctx_t;
+
+
 /* Macros --------------------------------------------------------------------*/
 #define LEN_BITS_TO_BYTES(lenBits)  (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
 
@@ -55,12 +74,11 @@ ProvisioningTool_importType;
 //------------------------------------------------------------------------------
 static seos_err_t
 create_and_import_aes_key(
-    OS_Crypto_Handle_t  hCrypto,
-    SeosKeyStoreCtx*    keyStoreCtx,
-    char*               keyName,
-    bool                isKeyExportable,
-    unsigned int        keyLenBits,
-    char*               keyBytes)
+    app_ctx_t*       app_ctx,
+    char*            keyName,
+    bool             isKeyExportable,
+    unsigned int     keyLenBits,
+    char*            keyBytes)
 {
     seos_err_t ret;
     OS_CryptoKey_Data_t keyData;
@@ -80,7 +98,7 @@ create_and_import_aes_key(
         };
 
         OS_CryptoKey_Handle_t hKey;
-        ret = OS_CryptoKey_generate(&hKey, hCrypto, &keySpec);
+        ret = OS_CryptoKey_generate(&hKey, app_ctx->hCrypto, &keySpec);
         if (SEOS_SUCCESS != ret)
         {
             Debug_LOG_DEBUG("OS_CryptoKey_generate failed with err %d", ret);
@@ -107,7 +125,7 @@ create_and_import_aes_key(
     }
 
     ret = SeosKeyStoreApi_importKey(
-            keyStoreCtx,
+            &(app_ctx->keyStore.parent),
             keyName,
             &keyData,
             sizeof(keyData));
@@ -124,13 +142,12 @@ create_and_import_aes_key(
 //------------------------------------------------------------------------------
 static seos_err_t
 create_and_import_key_pair(
-    OS_Crypto_Handle_t   hCrypto,
-    SeosKeyStoreCtx*     keyStoreCtx,
-    unsigned int         importType,
-    char*                keyNamePrv,
-    char*                keyNamePub,
-    bool                 isKeyExportable,
-    unsigned int         keyLenBits)
+    app_ctx_t*       app_ctx,
+    unsigned int     importType,
+    char*            keyNamePrv,
+    char*            keyNamePub,
+    bool             isKeyExportable,
+    unsigned int     keyLenBits)
 {
     seos_err_t ret;
 
@@ -167,7 +184,7 @@ create_and_import_key_pair(
     }
 
     OS_CryptoKey_Handle_t hKeyPrv;
-    ret = OS_CryptoKey_generate(&hKeyPrv, hCrypto, &keySpec);
+    ret = OS_CryptoKey_generate(&hKeyPrv, app_ctx->hCrypto, &keySpec);
     if (SEOS_SUCCESS != ret)
     {
         Debug_LOG_DEBUG("OS_CryptoKey_generate failed with err %d", ret);
@@ -177,7 +194,7 @@ create_and_import_key_pair(
     OS_CryptoKey_Handle_t hKeyPub;
     ret = OS_CryptoKey_makePublic(
             &hKeyPub,
-            hCrypto,
+            app_ctx->hCrypto,
             hKeyPrv,
             &keySpec.key.attribs);
     if (SEOS_SUCCESS != ret)
@@ -195,7 +212,7 @@ create_and_import_key_pair(
     }
 
     ret = SeosKeyStoreApi_importKey(
-            keyStoreCtx,
+            &(app_ctx->keyStore.parent),
             keyNamePrv,
             &keyData,
             sizeof(keyData));
@@ -213,7 +230,7 @@ create_and_import_key_pair(
     }
 
     ret = SeosKeyStoreApi_importKey(
-            keyStoreCtx,
+            &(app_ctx->keyStore.parent),
             keyNamePub,
             &keyData,
             sizeof(keyData));
@@ -240,13 +257,10 @@ dummyEntropyFunc(
 
 //------------------------------------------------------------------------------
 static seos_err_t
-initializeApp(
-    OS_Crypto_Handle_t*  hCrypto,
-    SeosKeyStore*        localKeyStore,
-    KeyStoreContext*     keyStoreCtx)
+initialize_crypto(
+    app_ctx_t* app_ctx)
 {
-    seos_err_t ret;
-    OS_Crypto_Config_t cfgLocal =
+    OS_Crypto_Config_t cfgCrypto =
     {
         .mode = OS_Crypto_MODE_LIBRARY,
         .mem = {
@@ -259,12 +273,28 @@ initializeApp(
         }
     };
 
-    // Open local instance of API
-    ret = OS_Crypto_init(hCrypto, &cfgLocal);
+    // Open local instance of Crypto API
+    seos_err_t ret = OS_Crypto_init( &(app_ctx->hCrypto), &cfgCrypto);
     if (ret != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoLib_init failed with error code %d!",
                         __func__, ret);
+        return SEOS_ERROR_GENERIC;
+    }
+
+    return SEOS_SUCCESS;
+}
+
+
+//------------------------------------------------------------------------------
+static seos_err_t
+prepare_keystore_NVM(
+    app_ctx_t* app_ctx)
+{
+    // create and initialize an nvm instance that writes directly to a file
+    if (!FileNVM_ctor( &(app_ctx->fileNvm), NVM_PARTITION_NAME))
+    {
+        Debug_LOG_ERROR("%s: Failed to initialize FileNVM!", __func__);
         return SEOS_ERROR_GENERIC;
     }
 
@@ -275,17 +305,79 @@ initializeApp(
         .data.aes.bytes = KEYSTORE_KEY_AES
     };
 
-    if (!keyStoreContext_ctor(keyStoreCtx, KEYSTORE_IV, &masterKeyData))
+    if (!AesNvm_ctor(
+            &(app_ctx->aesNvm),
+            FileNVM_TO_NVM( &(app_ctx->fileNvm) ),
+            KEYSTORE_IV,
+            &masterKeyData))
     {
-        Debug_LOG_ERROR("%s: Failed to initialize the keystore context!",
+        Debug_LOG_ERROR("%s: Failed to initialize AesNvm!", __func__);
+        return SEOS_ERROR_GENERIC;
+    }
+
+    if (!SeosSpiffs_ctor(
+            &(app_ctx->fs),
+            AesNvm_TO_NVM( &(app_ctx->aesNvm) ),
+            NVM_PARTITION_SIZE,
+            0))
+    {
+        Debug_LOG_ERROR("%s: Failed to initialize spiffs!", __func__);
+        return SEOS_ERROR_GENERIC;
+    }
+
+    seos_err_t ret = SeosSpiffs_mount( &(app_ctx->fs) );
+    if (ret != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: spiffs mount failed with error code %d!",
+                        __func__, ret);
+
+        return SEOS_ERROR_GENERIC;
+    }
+
+    app_ctx->fileStreamFactory = SpiffsFileStreamFactory_TO_FILE_STREAM_FACTORY(
+                                    SpiffsFileStreamFactory_getInstance(
+                                        &(app_ctx->fs)));
+    if (app_ctx->fileStreamFactory == NULL)
+    {
+        Debug_LOG_ERROR("%s: Failed to get the SpiffsFileStreamFactory instance!",
                         __func__);
         return SEOS_ERROR_GENERIC;
     }
 
-    ret = SeosKeyStore_init(localKeyStore,
-                            keyStoreCtx->fileStreamFactory,
-                            *hCrypto,
-                            KEY_STORE_INSTANCE_NAME);
+    return SEOS_SUCCESS;
+}
+
+
+//------------------------------------------------------------------------------
+static seos_err_t
+initializeApp(
+    app_ctx_t* app_ctx)
+{
+    seos_err_t ret;
+
+    ret = initialize_crypto(app_ctx);
+    if (ret != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: initialize_crypto failed with error code %d!",
+                        __func__, ret);
+        return SEOS_ERROR_GENERIC;
+    }
+
+    // prepave NVM subsystem for keystore
+    ret = prepare_keystore_NVM(app_ctx);
+    if (ret != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: prepare_keystore_NVM failed with error code %d!",
+                        __func__, ret);
+        return SEOS_ERROR_GENERIC;
+    }
+
+    // setup keystore with fielstream based on NVM subsystem
+    ret = SeosKeyStore_init(
+            &(app_ctx->keyStore),
+            app_ctx->fileStreamFactory,
+            app_ctx->hCrypto,
+            KEY_STORE_INSTANCE_NAME);
     if (ret != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosKeyStore_init failed with error code %d!",
@@ -300,13 +392,16 @@ initializeApp(
 //------------------------------------------------------------------------------
 static void
 deinitializeApp(
-    OS_Crypto_Handle_t  hCrypto,
-    SeosKeyStore*       localKeyStore,
-    KeyStoreContext*    keyStoreCtx)
+    app_ctx_t* app_ctx)
 {
-    OS_Crypto_free(hCrypto);
-    SeosKeyStore_deInit(&(localKeyStore->parent));
-    keyStoreContext_dtor(keyStoreCtx);
+    SeosKeyStore_deInit( &(app_ctx->keyStore.parent) );
+
+    FileStreamFactory_dtor(app_ctx->fileStreamFactory);
+    SeosSpiffs_dtor( &(app_ctx->fs) );
+    // ToDo: AesNvm_dtor
+    FileNVM_dtor( FileNVM_TO_NVM( &(app_ctx->fileNvm) ) );
+
+    OS_Crypto_free(app_ctx->hCrypto);
 }
 
 
@@ -316,21 +411,16 @@ int main(
     char*  argv[])
 {
     int exit_code = 0;
-
-    OS_Crypto_Handle_t hCrypto;
-    SeosKeyStore keyStore;
-    KeyStoreContext ctx;
     seos_err_t ret;
+    app_ctx_t app_ctx;
 
-    ret = initializeApp(&hCrypto, &keyStore, &ctx);
+    ret = initializeApp(&app_ctx);
     if (ret != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: initializeApp failed with error code %d!",
                         __func__, ret);
         return -1;
     }
-
-    SeosKeyStoreCtx* keyStoreCtx = &(keyStore.parent);
 
     // argv[0] is the binary name, argv[1] would be the first parameter.
     if (argc < 2)
@@ -357,8 +447,7 @@ int main(
         char* keyBytes = argv[5];
 
         ret = create_and_import_aes_key(
-                hCrypto,
-                keyStoreCtx,
+                &app_ctx,
                 keyName,
                 isKeyExportable,
                 keyLenBits,
@@ -386,8 +475,7 @@ int main(
         unsigned int keyLenBits = atoi(argv[5]);
 
         ret = create_and_import_key_pair(
-                hCrypto,
-                keyStoreCtx,
+                &app_ctx,
                 importType,
                 keyNamePrv,
                 keyNamePub,
@@ -403,7 +491,7 @@ int main(
     }
 
 exit:
-    deinitializeApp(hCrypto, &keyStore, &ctx);
+    deinitializeApp(&app_ctx);
 
     return exit_code;
 }
