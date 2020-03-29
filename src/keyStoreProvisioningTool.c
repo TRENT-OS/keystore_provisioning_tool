@@ -308,6 +308,7 @@ prepare_keystore_NVM(
     if (!AesNvm_ctor(
             &(app_ctx->aesNvm),
             FileNVM_TO_NVM( &(app_ctx->fileNvm) ),
+            app_ctx->hCrypto,
             KEYSTORE_IV,
             &masterKeyData))
     {
