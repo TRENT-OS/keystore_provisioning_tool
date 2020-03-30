@@ -10,9 +10,9 @@
 
 /* Public functions -----------------------------------------------------------*/
 bool keyStoreContext_ctor(
-    KeyStoreContext*              keyStoreCtx,
-    const void*                   startIv,
-    const SeosCryptoApi_Key_Data* masterKeyData)
+    KeyStoreContext*           keyStoreCtx,
+    const void*                startIv,
+    const OS_CryptoKey_Data_t* masterKeyData)
 {
     // create and initialize an nvm instance that writes directly to a file
     if (!FileNVM_ctor(&(keyStoreCtx->fileNvm), NVM_PARTITION_NAME))

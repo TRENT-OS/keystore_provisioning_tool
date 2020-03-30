@@ -17,7 +17,7 @@
 
 #include "SeosKeyStoreApi.h"
 
-#include "SeosCryptoApi.h"
+#include "OS_Crypto.h"
 
 #include "KeyStoreInit.h"
 
@@ -49,30 +49,30 @@ ProvisioningTool_importType;
 #define LEN_BITS_TO_BYTES(lenBits)  (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
 
 /* Private function prototypes -------------------------------------------------------------------*/
-static bool initializeApp(SeosCryptoApiH* hCrypto,
+static bool initializeApp(OS_Crypto_Handle_t* hCrypto,
                           SeosKeyStore* localKeyStore,
                           KeyStoreContext* keyStoreCtx);
-static void deinitializeApp(SeosCryptoApiH hCrypto,
+static void deinitializeApp(OS_Crypto_Handle_t hCrypto,
                             SeosKeyStore* localKeyStore, KeyStoreContext* keyStoreCtx);
 static int dummyEntropyFunc(void* ctx, unsigned char* buf, size_t len);
-static void generateAndImportKeyPair(SeosCryptoApiH hCrypto,
+static void generateAndImportKeyPair(OS_Crypto_Handle_t hCrypto,
                                      SeosKeyStoreCtx* keyStoreCtx,
                                      char* keyNamePrv,
                                      char* keyNamePub,
-                                     SeosCryptoApi_Key_Spec* spec);
+                                     OS_CryptoKey_Spec_t* spec);
 
 /* Private variables -------------------------------------------------------------------*/
-static SeosCryptoApi_KeyH hKey;
-static SeosCryptoApi_Key_Data keyData;
-static SeosCryptoApi_Key_Spec keySpec =
+static OS_CryptoKey_Handle_t hKey;
+static OS_CryptoKey_Data_t keyData;
+static OS_CryptoKey_Spec_t keySpec =
 {
-    .type = SeosCryptoApi_Key_SPECTYPE_BITS
+    .type = OS_CryptoKey_SPECTYPE_BITS
 };
 
 /* Application -------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-    SeosCryptoApiH hCrypto;
+    OS_Crypto_Handle_t hCrypto;
     SeosKeyStore localKeyStore;
     KeyStoreContext keyStoreCtx;
 
@@ -111,23 +111,23 @@ int main(int argc, char* argv[])
             Debug_LOG_DEBUG("\nGenerating AES key:\n   key name = %s\n   key length = %u\n   key exportable = %u\n\n",
                             keyName, keyLenBits, keyExportable);
 
-            keySpec.key.type = SeosCryptoApi_Key_TYPE_AES;
+            keySpec.key.type = OS_CryptoKey_TYPE_AES;
             keySpec.key.attribs.exportable = keyExportable;
             keySpec.key.params.bits = keyLenBits;
-            err = SeosCryptoApi_Key_generate(&hKey, hCrypto, &keySpec);
+            err = OS_CryptoKey_generate(&hKey, hCrypto, &keySpec);
             Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
-                                  "SeosCryptoApi_Key_generate failed with err %d", err);
+                                  "OS_CryptoKey_generate failed with err %d", err);
 
-            err = SeosCryptoApi_Key_export(hKey, &keyData);
+            err = OS_CryptoKey_export(hKey, &keyData);
             Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
-                                  "SeosCryptoApi_Key_export failed with err %d", err);
+                                  "OS_CryptoKey_export failed with err %d", err);
         }
         else
         {
             Debug_LOG_DEBUG("\nImporting AES key:\n   key name = %s\n   key length = %u\n   key exportable = %u\n   key bytes = %s\n\n",
                             keyName, keyLenBits, keyExportable, keyBytes);
 
-            keyData.type = SeosCryptoApi_Key_TYPE_AES;
+            keyData.type = OS_CryptoKey_TYPE_AES;
             keyData.attribs.exportable = keyExportable;
             memcpy(keyData.data.aes.bytes, keyBytes, LEN_BITS_TO_BYTES(keyLenBits));
             keyData.data.aes.len = LEN_BITS_TO_BYTES(keyLenBits);
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
         char* keyNamePrv = argv[2];
         char* keyNamePub = argv[3];
 
-        keySpec.type = SeosCryptoApi_Key_SPECTYPE_BITS;
+        keySpec.type = OS_CryptoKey_SPECTYPE_BITS;
         keySpec.key.attribs.exportable = keyExportable;
         keySpec.key.params.bits = keyLenBits;
 
@@ -162,19 +162,19 @@ int main(int argc, char* argv[])
         case RSA_KEY_PAIR:
             Debug_LOG_DEBUG("\nGenerating RSA key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key exportable = %u\n\n",
                             keyNamePrv, keyNamePub, keyLenBits, keyExportable);
-            keySpec.key.type = SeosCryptoApi_Key_TYPE_RSA_PRV;
+            keySpec.key.type = OS_CryptoKey_TYPE_RSA_PRV;
             break;
 
         case DH_KEY_PAIR:
             Debug_LOG_DEBUG("\nGenerating DH key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key exportable = %u\n\n",
                             keyNamePrv, keyNamePub, keyLenBits, keyExportable);
-            keySpec.key.type = SeosCryptoApi_Key_TYPE_DH_PRV;
+            keySpec.key.type = OS_CryptoKey_TYPE_DH_PRV;
             break;
 
         case SECP256R1_KEY_PAIR:
             Debug_LOG_DEBUG("\nGenerating SECP256r1 key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key exportable = %u\n\n",
                             keyNamePrv, keyNamePub, keyLenBits, keyExportable);
-            keySpec.key.type = SeosCryptoApi_Key_TYPE_SECP256R1_PRV;
+            keySpec.key.type = OS_CryptoKey_TYPE_SECP256R1_PRV;
             break;
 
         default:
@@ -196,14 +196,14 @@ exit:
 }
 
 /* Private functions -------------------------------------------------------------------*/
-static bool initializeApp(SeosCryptoApiH* hCrypto,
+static bool initializeApp(OS_Crypto_Handle_t* hCrypto,
                           SeosKeyStore* localKeyStore,
                           KeyStoreContext* keyStoreCtx)
 {
     seos_err_t err;
-    SeosCryptoApi_Config cfgLocal =
+    OS_Crypto_Config_t cfgLocal =
     {
-        .mode = SeosCryptoApi_Mode_LIBRARY,
+        .mode = OS_Crypto_MODE_LIBRARY,
         .mem = {
             .malloc = malloc,
             .free = free,
@@ -215,18 +215,18 @@ static bool initializeApp(SeosCryptoApiH* hCrypto,
     };
 
     // Open local instance of API
-    err = SeosCryptoApi_init(hCrypto, &cfgLocal);
+    err = OS_Crypto_init(hCrypto, &cfgLocal);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS, "err %d", err);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: SeosCryptoLib_init failed with error code %d!", __func__,
+        Debug_LOG_ERROR("%s: OS_CryptoLib_init failed with error code %d!", __func__,
                         err);
         return false;
     }
 
-    static const SeosCryptoApi_Key_Data masterKeyData =
+    static const OS_CryptoKey_Data_t masterKeyData =
     {
-        .type = SeosCryptoApi_Key_TYPE_AES,
+        .type = OS_CryptoKey_TYPE_AES,
         .data.aes.len = sizeof(KEYSTORE_KEY_AES)-1,
         .data.aes.bytes = KEYSTORE_KEY_AES
     };
@@ -252,10 +252,10 @@ static bool initializeApp(SeosCryptoApiH* hCrypto,
     return true;
 }
 
-static void deinitializeApp(SeosCryptoApiH hCrypto,
+static void deinitializeApp(OS_Crypto_Handle_t hCrypto,
                             SeosKeyStore* localKeyStore, KeyStoreContext* keyStoreCtx)
 {
-    SeosCryptoApi_free(hCrypto);
+    OS_Crypto_free(hCrypto);
     SeosKeyStore_deInit(&(localKeyStore->parent));
     keyStoreContext_dtor(keyStoreCtx);
 }
@@ -265,35 +265,35 @@ static int dummyEntropyFunc(void* ctx, unsigned char* buf, size_t len)
     return 0;
 }
 
-static void generateAndImportKeyPair(SeosCryptoApiH hCrypto,
+static void generateAndImportKeyPair(OS_Crypto_Handle_t hCrypto,
                                      SeosKeyStoreCtx* keyStoreCtx,
                                      char* keyNamePrv,
                                      char* keyNamePub,
-                                     SeosCryptoApi_Key_Spec* spec)
+                                     OS_CryptoKey_Spec_t* spec)
 {
-    SeosCryptoApi_KeyH hKeyPrv;
-    SeosCryptoApi_KeyH hKeyPub;
+    OS_CryptoKey_Handle_t hKeyPrv;
+    OS_CryptoKey_Handle_t hKeyPub;
     seos_err_t err = SEOS_ERROR_GENERIC;
 
-    err = SeosCryptoApi_Key_generate(&hKeyPrv, hCrypto, spec);
+    err = OS_CryptoKey_generate(&hKeyPrv, hCrypto, spec);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
-                          "SeosCryptoApi_Key_generate failed with err %d", err);
-    err = SeosCryptoApi_Key_makePublic(&hKeyPub, hCrypto, hKeyPrv,
+                          "OS_CryptoKey_generate failed with err %d", err);
+    err = OS_CryptoKey_makePublic(&hKeyPub, hCrypto, hKeyPrv,
                                        &spec->key.attribs);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
-                          "SeosCryptoApi_Key_generate failed with err %d", err);
+                          "OS_CryptoKey_generate failed with err %d", err);
 
-    err = SeosCryptoApi_Key_export(hKeyPrv, &keyData);
+    err = OS_CryptoKey_export(hKeyPrv, &keyData);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
-                          "SeosCryptoApi_Key_export failed with err %d", err);
+                          "OS_CryptoKey_export failed with err %d", err);
     err = SeosKeyStoreApi_importKey(keyStoreCtx, keyNamePrv, &keyData,
                                     sizeof(keyData));
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
                           "SeosKeyStoreApi_importKey failed with err %d", err);
 
-    err = SeosCryptoApi_Key_export(hKeyPub, &keyData);
+    err = OS_CryptoKey_export(hKeyPub, &keyData);
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
-                          "SeosCryptoApi_Key_export failed with err %d", err);
+                          "OS_CryptoKey_export failed with err %d", err);
     err = SeosKeyStoreApi_importKey(keyStoreCtx, keyNamePub, &keyData,
                                     sizeof(keyData));
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS,
