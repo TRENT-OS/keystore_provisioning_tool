@@ -219,7 +219,7 @@ static bool initializeApp(OS_Crypto_Handle_t* hCrypto,
     Debug_ASSERT_PRINTFLN(err == SEOS_SUCCESS, "err %d", err);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: OS_CryptoLib_init failed with error code %d!", __func__,
+        Debug_LOG_ERROR("%s: OS_Crypto_init failed with error code %d!", __func__,
                         err);
         return false;
     }
