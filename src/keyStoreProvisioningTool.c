@@ -21,7 +21,7 @@
 
 #include "KeyStoreInit.h"
 
-#include "keystore_config.h"
+#include "config.h"
 
 /* Defines -------------------------------------------------------------------*/
 #define NVM_CHANNEL_NUMBER          (6)

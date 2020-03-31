@@ -36,7 +36,8 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${SEOS_LIBS_KEYSTORE}/src
+        ${CMAKE_CURRENT_LIST_DIR}       # for config.h
+        ${SEOS_LIBS_KEYSTORE}/src       # for AesNvm.h
 )
 
 target_compile_options(${PROJECT_NAME}
