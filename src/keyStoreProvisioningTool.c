@@ -8,16 +8,13 @@
  *
  * Copyright (C) 2019, Hensoldt Cyber GmbH
  */
-#include <stdio.h>
-#include <stdbool.h>
-#include "LibDebug/Debug.h"
 
-#include "SeosKeyStore.h"
-#include "SeosKeyStoreClient.h"
+#include "config.h"
 
-#include "SeosKeyStoreApi.h"
-
+#include "OS_Keystore.h"
 #include "OS_Crypto.h"
+
+#include "LibDebug/Debug.h"
 
 #include "AesNvm.h"
 #include "FileNVM.h"
@@ -25,7 +22,8 @@
 #include "SpiffsFileStream.h"
 #include "SpiffsFileStreamFactory.h"
 
-#include "config.h"
+#include <stdio.h>
+#include <stdbool.h>
 
 /* Defines -------------------------------------------------------------------*/
 #define NVM_PARTITION_SIZE          (1024*128)
@@ -54,14 +52,12 @@ ProvisioningTool_importType;
 
 
 typedef struct {
-    OS_Crypto_Handle_t  hCrypto;
-
-    SeosKeyStore        keyStore;
-
-    FileNVM             fileNvm;
-    AesNvm              aesNvm;
-    SeosSpiffs          fs;
-    FileStreamFactory*  fileStreamFactory;
+    OS_Crypto_Handle_t      hCrypto;
+    OS_Keystore_Handle_t    hKeystore;
+    FileNVM                 fileNvm;
+    AesNvm                  aesNvm;
+    SeosSpiffs              fs;
+    FileStreamFactory*      fileStreamFactory;
 } app_ctx_t;
 
 
@@ -124,11 +120,11 @@ create_and_import_aes_key(
         keyData.data.aes.len = LEN_BITS_TO_BYTES(keyLenBits);
     }
 
-    ret = SeosKeyStoreApi_importKey(
-            &(app_ctx->keyStore.parent),
-            keyName,
-            &keyData,
-            sizeof(keyData));
+    ret = OS_Keystore_storeKey(
+        app_ctx->hKeystore,
+        keyName,
+        &keyData,
+        sizeof(keyData));
     if (SEOS_SUCCESS != ret)
     {
         Debug_LOG_DEBUG("SeosKeyStoreApi_importKey failed with err %d", ret);
@@ -211,11 +207,11 @@ create_and_import_key_pair(
         return SEOS_ERROR_GENERIC;
     }
 
-    ret = SeosKeyStoreApi_importKey(
-            &(app_ctx->keyStore.parent),
-            keyNamePrv,
-            &keyData,
-            sizeof(keyData));
+    ret = OS_Keystore_storeKey(
+        app_ctx->hKeystore,
+        keyNamePrv,
+        &keyData,
+        sizeof(keyData));
     if (SEOS_SUCCESS != ret)
     {
         Debug_LOG_DEBUG("SeosKeyStoreApi_importKey failed with err %d", ret);
@@ -229,11 +225,11 @@ create_and_import_key_pair(
         return SEOS_ERROR_GENERIC;
     }
 
-    ret = SeosKeyStoreApi_importKey(
-            &(app_ctx->keyStore.parent),
-            keyNamePub,
-            &keyData,
-            sizeof(keyData));
+    ret = OS_Keystore_storeKey(
+        app_ctx->hKeystore,
+        keyNamePub,
+        &keyData,
+        sizeof(keyData));
     if (SEOS_SUCCESS != ret)
     {
         Debug_LOG_DEBUG("SeosKeyStoreApi_importKey failed with err %d", ret);
@@ -374,8 +370,8 @@ initializeApp(
     }
 
     // setup keystore with fielstream based on NVM subsystem
-    ret = SeosKeyStore_init(
-            &(app_ctx->keyStore),
+    ret = OS_Keystore_init(
+            &app_ctx->hKeystore,
             app_ctx->fileStreamFactory,
             app_ctx->hCrypto,
             KEY_STORE_INSTANCE_NAME);
@@ -395,13 +391,12 @@ static void
 deinitializeApp(
     app_ctx_t* app_ctx)
 {
-    SeosKeyStore_deInit( &(app_ctx->keyStore.parent) );
-
     FileStreamFactory_dtor(app_ctx->fileStreamFactory);
     SeosSpiffs_dtor( &(app_ctx->fs) );
     // ToDo: AesNvm_dtor
     FileNVM_dtor( FileNVM_TO_NVM( &(app_ctx->fileNvm) ) );
 
+    OS_Keystore_free(app_ctx->hKeystore);
     OS_Crypto_free(app_ctx->hCrypto);
 }
 
