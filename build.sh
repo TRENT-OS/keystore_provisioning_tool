@@ -7,10 +7,10 @@ BUILD_SCRIPT_DIR=$(cd `dirname $0` && pwd)
 BUILD_DIR=build
 
 if [ "$#" -ne 1 ]; then
-    echo "Illegal number of parameters, SANDBOX_PATH needed!"
+    echo "Illegal number of parameters, OS_SDK_PATH needed!"
     exit 1
 fi
-SANDBOX_PATH=$1
+OS_SDK_PATH=$1
 
 if [[ -e ${BUILD_DIR} ]] && [[ ! -e ${BUILD_DIR}/rules.ninja ]]; then
     echo "clean broken build folder and re-initialize it"
@@ -24,7 +24,7 @@ if [[ ! -e ${BUILD_DIR} ]]; then
         cd ${BUILD_DIR}
 
         CMAKE_PARAMS=(
-            -DSANDBOX_SOURCE_PATH:STRING=${SANDBOX_PATH}
+            -DOS_SDK_SOURCE_PATH:STRING=${OS_SDK_PATH}
         )
 
         cmake ${CMAKE_PARAMS[@]} -G Ninja ${BUILD_SCRIPT_DIR}

@@ -6,8 +6,8 @@ cmake_minimum_required(VERSION 3.7.2)
 set(PAGE_SIZE_VALUE 4096 CACHE STRING "" FORCE)
 set(NO_KERNEL_BUILD ON CACHE BOOL "")
 
-set(SEOS_SANDBOX_PASSIVE_CMAKE ON)
-include(${SANDBOX_SOURCE_PATH}/CMakeLists.txt)
+set(OS_SDK_PASSIVE_CMAKE ON)
+include(${OS_SDK_SOURCE_PATH}/CMakeLists.txt)
 
 SET(SEOS_LIBS_KEYSTORE "${SEOS_LIBS_DIR}/seos_keystore")
 
