@@ -30,13 +30,11 @@ project(keystore_provisioning_tool C)
 add_executable(${PROJECT_NAME}
     src/keyStoreProvisioningTool.c
     src/FileNVM.c
-    ${OS_LIBS_KEYSTORE}/src/AesNvm.c
 )
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}  # for config.h
-        ${OS_LIBS_KEYSTORE}/src    # for AesNvm.h
 )
 
 target_compile_options(${PROJECT_NAME}
