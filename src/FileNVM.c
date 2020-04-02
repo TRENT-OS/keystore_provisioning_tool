@@ -21,7 +21,9 @@ static const Nvm_Vtable FileNvm_vtable =
 
 /* Public functions ----------------------------------------------------------*/
 
-bool FileNVM_ctor(FileNVM* self, const char* name)
+bool FileNVM_ctor(
+    FileNVM*    self,
+    const char* name)
 {
     Debug_ASSERT_SELF(self);
     Nvm* nvm = FileNVM_TO_NVM(self);
@@ -48,7 +50,10 @@ bool FileNVM_ctor(FileNVM* self, const char* name)
     return true;
 }
 
-size_t FileNVM_write(Nvm* nvm, size_t addr, void const* buffer, size_t length)
+size_t FileNVM_write(
+    Nvm* nvm, size_t addr,
+    void const* buffer,
+    size_t length)
 {
     FileNVM* self = (FileNVM*) nvm;
     Debug_ASSERT_SELF(self);
@@ -65,7 +70,10 @@ size_t FileNVM_write(Nvm* nvm, size_t addr, void const* buffer, size_t length)
     return writtenTotal;
 }
 
-size_t FileNVM_read(Nvm* nvm, size_t addr, void* buffer, size_t length)
+size_t FileNVM_read(
+    Nvm* nvm, size_t addr,
+    void* buffer,
+    size_t length)
 {
     FileNVM* self = (FileNVM*) nvm;
     Debug_ASSERT_SELF(self);
@@ -82,7 +90,10 @@ size_t FileNVM_read(Nvm* nvm, size_t addr, void* buffer, size_t length)
     return readTotal;
 }
 
-size_t FileNVM_erase(Nvm* nvm, size_t addr, size_t length)
+size_t FileNVM_erase(
+    Nvm*   nvm,
+    size_t addr,
+    size_t length)
 {
     FileNVM* self = (FileNVM*) nvm;
     Debug_ASSERT_SELF(self);
@@ -103,13 +114,15 @@ size_t FileNVM_erase(Nvm* nvm, size_t addr, size_t length)
     return erasedTotal;
 }
 
-size_t FileNVM_getSize(Nvm* nvm)
+size_t FileNVM_getSize(
+    Nvm* nvm)
 {
     // not implemented
     return 0;
 }
 
-void FileNVM_dtor(Nvm* nvm)
+void FileNVM_dtor(
+    Nvm* nvm)
 {
     DECL_UNUSED_VAR(FileNVM * self) = (FileNVM*) nvm;
     Debug_ASSERT_SELF(self);

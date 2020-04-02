@@ -47,34 +47,31 @@ typedef enum
     RSA_KEY_PAIR,
     DH_KEY_PAIR,
     SECP256R1_KEY_PAIR
-}
-ProvisioningTool_importType;
+} ProvisioningTool_importType;
 
-
-typedef struct {
-    OS_Crypto_Handle_t      hCrypto;
-    OS_Keystore_Handle_t    hKeystore;
-    FileNVM                 fileNvm;
-    AesNvm                  aesNvm;
-    SeosSpiffs              fs;
-    FileStreamFactory*      fileStreamFactory;
+typedef struct
+{
+    OS_Crypto_Handle_t hCrypto;
+    OS_Keystore_Handle_t hKeystore;
+    FileNVM fileNvm;
+    AesNvm aesNvm;
+    SeosSpiffs fs;
+    FileStreamFactory* fileStreamFactory;
 } app_ctx_t;
-
 
 /* Macros --------------------------------------------------------------------*/
 #define LEN_BITS_TO_BYTES(lenBits)  (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
-
 
 /* Private functions ---------------------------------------------------------*/
 
 //------------------------------------------------------------------------------
 static seos_err_t
 create_and_import_aes_key(
-    app_ctx_t*       app_ctx,
-    char*            keyName,
-    bool             isKeyExportable,
-    unsigned int     keyLenBits,
-    char*            keyBytes)
+    app_ctx_t*   app_ctx,
+    char*        keyName,
+    bool         isKeyExportable,
+    unsigned int keyLenBits,
+    char*        keyBytes)
 {
     seos_err_t ret;
     OS_CryptoKey_Data_t keyData;
@@ -121,10 +118,10 @@ create_and_import_aes_key(
     }
 
     ret = OS_Keystore_storeKey(
-        app_ctx->hKeystore,
-        keyName,
-        &keyData,
-        sizeof(keyData));
+              app_ctx->hKeystore,
+              keyName,
+              &keyData,
+              sizeof(keyData));
     if (SEOS_SUCCESS != ret)
     {
         Debug_LOG_DEBUG("SeosKeyStoreApi_importKey failed with err %d", ret);
@@ -138,12 +135,12 @@ create_and_import_aes_key(
 //------------------------------------------------------------------------------
 static seos_err_t
 create_and_import_key_pair(
-    app_ctx_t*       app_ctx,
-    unsigned int     importType,
-    char*            keyNamePrv,
-    char*            keyNamePub,
-    bool             isKeyExportable,
-    unsigned int     keyLenBits)
+    app_ctx_t*   app_ctx,
+    unsigned int importType,
+    char*        keyNamePrv,
+    char*        keyNamePub,
+    bool         isKeyExportable,
+    unsigned int keyLenBits)
 {
     seos_err_t ret;
 
@@ -189,10 +186,10 @@ create_and_import_key_pair(
 
     OS_CryptoKey_Handle_t hKeyPub;
     ret = OS_CryptoKey_makePublic(
-            &hKeyPub,
-            app_ctx->hCrypto,
-            hKeyPrv,
-            &keySpec.key.attribs);
+              &hKeyPub,
+              app_ctx->hCrypto,
+              hKeyPrv,
+              &keySpec.key.attribs);
     if (SEOS_SUCCESS != ret)
     {
         Debug_LOG_DEBUG("OS_CryptoKey_makePublic failed with err %d", ret);
@@ -208,10 +205,10 @@ create_and_import_key_pair(
     }
 
     ret = OS_Keystore_storeKey(
-        app_ctx->hKeystore,
-        keyNamePrv,
-        &keyData,
-        sizeof(keyData));
+              app_ctx->hKeystore,
+              keyNamePrv,
+              &keyData,
+              sizeof(keyData));
     if (SEOS_SUCCESS != ret)
     {
         Debug_LOG_DEBUG("SeosKeyStoreApi_importKey failed with err %d", ret);
@@ -226,10 +223,10 @@ create_and_import_key_pair(
     }
 
     ret = OS_Keystore_storeKey(
-        app_ctx->hKeystore,
-        keyNamePub,
-        &keyData,
-        sizeof(keyData));
+              app_ctx->hKeystore,
+              keyNamePub,
+              &keyData,
+              sizeof(keyData));
     if (SEOS_SUCCESS != ret)
     {
         Debug_LOG_DEBUG("SeosKeyStoreApi_importKey failed with err %d", ret);
@@ -243,9 +240,9 @@ create_and_import_key_pair(
 //------------------------------------------------------------------------------
 static int
 dummyEntropyFunc(
-    void*           ctx,
-    unsigned char*  buf,
-    size_t          len)
+    void*          ctx,
+    unsigned char* buf,
+    size_t         len)
 {
     return 0;
 }
@@ -297,7 +294,7 @@ prepare_keystore_NVM(
     static const OS_CryptoKey_Data_t masterKeyData =
     {
         .type = OS_CryptoKey_TYPE_AES,
-        .data.aes.len = sizeof(KEYSTORE_KEY_AES)-1,
+        .data.aes.len = sizeof(KEYSTORE_KEY_AES) - 1,
         .data.aes.bytes = KEYSTORE_KEY_AES
     };
 
@@ -332,8 +329,8 @@ prepare_keystore_NVM(
     }
 
     app_ctx->fileStreamFactory = SpiffsFileStreamFactory_TO_FILE_STREAM_FACTORY(
-                                    SpiffsFileStreamFactory_getInstance(
-                                        &(app_ctx->fs)));
+                                     SpiffsFileStreamFactory_getInstance(
+                                         &(app_ctx->fs)));
     if (app_ctx->fileStreamFactory == NULL)
     {
         Debug_LOG_ERROR("%s: Failed to get the SpiffsFileStreamFactory instance!",
@@ -371,10 +368,10 @@ initializeApp(
 
     // setup keystore with fielstream based on NVM subsystem
     ret = OS_Keystore_init(
-            &app_ctx->hKeystore,
-            app_ctx->fileStreamFactory,
-            app_ctx->hCrypto,
-            KEY_STORE_INSTANCE_NAME);
+              &app_ctx->hKeystore,
+              app_ctx->fileStreamFactory,
+              app_ctx->hCrypto,
+              KEY_STORE_INSTANCE_NAME);
     if (ret != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosKeyStore_init failed with error code %d!",
@@ -403,8 +400,8 @@ deinitializeApp(
 
 /* Application ---------------------------------------------------------------*/
 int main(
-    int    argc,
-    char*  argv[])
+    int   argc,
+    char* argv[])
 {
     int exit_code = 0;
     seos_err_t ret;
@@ -443,11 +440,11 @@ int main(
         char* keyBytes = argv[5];
 
         ret = create_and_import_aes_key(
-                &app_ctx,
-                keyName,
-                isKeyExportable,
-                keyLenBits,
-                keyBytes);
+                  &app_ctx,
+                  keyName,
+                  isKeyExportable,
+                  keyLenBits,
+                  keyBytes);
         if (ret != SEOS_SUCCESS)
         {
             Debug_LOG_ERROR("%s: create_and_import_aes_key failed with error code %d!",
@@ -471,12 +468,12 @@ int main(
         unsigned int keyLenBits = atoi(argv[5]);
 
         ret = create_and_import_key_pair(
-                &app_ctx,
-                importType,
-                keyNamePrv,
-                keyNamePub,
-                isKeyExportable,
-                keyLenBits);
+                  &app_ctx,
+                  importType,
+                  keyNamePrv,
+                  keyNamePub,
+                  isKeyExportable,
+                  keyLenBits);
         if (ret != SEOS_SUCCESS)
         {
             Debug_LOG_ERROR("%s: create_and_import_key_pair failed with error code %d!",

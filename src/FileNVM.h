@@ -48,34 +48,47 @@ struct FileNVM
  *
  */
 bool
-FileNVM_ctor(FileNVM* self, const char* name);
+FileNVM_ctor(
+    FileNVM*    self,
+    const char* name);
 /**
  * @brief static implementation of virtual method NVM_write().
  *
  */
 size_t
-FileNVM_write(Nvm* nvm, size_t addr, void const* buffer, size_t length);
+FileNVM_write(
+    Nvm* nvm, size_t addr,
+    void const* buffer,
+    size_t length);
 /**
  * @brief static implementation of virtual method NVM_read()
  *
  */
 size_t
-FileNVM_read(Nvm* nvm, size_t addr, void* buffer, size_t length);
+FileNVM_read(
+    Nvm* nvm, size_t addr,
+    void* buffer,
+    size_t length);
 /**
  * @brief static implementation of the erase method that is required
  * when working with flash
  *
  */
 size_t
-FileNVM_erase(Nvm* nvm, size_t addr, size_t length);
+FileNVM_erase(
+    Nvm*   nvm,
+    size_t addr,
+    size_t length);
 /**
  * @brief static implementation of virtual method NVM_getSize()
  *
  */
 size_t
-FileNVM_getSize(Nvm* nvm);
+FileNVM_getSize(
+    Nvm* nvm);
 
 void
-FileNVM_dtor(Nvm* nvm);
+FileNVM_dtor(
+    Nvm* nvm);
 
 ///@}
