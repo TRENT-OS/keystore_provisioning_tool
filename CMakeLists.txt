@@ -1,15 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 
 #-------------------------------------------------------------------------------
-# configure and use sandbox
+# configure and use the SDK
 
 set(PAGE_SIZE_VALUE 4096 CACHE STRING "" FORCE)
 set(NO_KERNEL_BUILD ON CACHE BOOL "")
 
 set(OS_SDK_PASSIVE_CMAKE ON)
 include(${OS_SDK_SOURCE_PATH}/CMakeLists.txt)
-
-SET(SEOS_LIBS_KEYSTORE "${SEOS_LIBS_DIR}/seos_keystore")
 
 seos_set_config_file(config.h)
 
@@ -21,7 +19,9 @@ seos_use_libs(
     SEOS_KEYSTORE
 )
 
-add_subdirectory(${SEOS_LIBS_DIR} sandbox_build)
+add_subdirectory(${SEOS_LIBS_DIR} sdk_build)
+
+set(OS_LIBS_KEYSTORE "${SEOS_LIBS_DIR}/seos_keystore")
 
 #-------------------------------------------------------------------------------
 
@@ -30,13 +30,13 @@ project(keystore_provisioning_tool C)
 add_executable(${PROJECT_NAME}
     src/keyStoreProvisioningTool.c
     src/FileNVM.c
-    ${SEOS_LIBS_KEYSTORE}/src/AesNvm.c
+    ${OS_LIBS_KEYSTORE}/src/AesNvm.c
 )
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}       # for config.h
-        ${SEOS_LIBS_KEYSTORE}/src       # for AesNvm.h
+        ${CMAKE_CURRENT_LIST_DIR}  # for config.h
+        ${OS_LIBS_KEYSTORE}/src    # for AesNvm.h
 )
 
 target_compile_options(${PROJECT_NAME}
