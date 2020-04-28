@@ -14,7 +14,6 @@ seos_set_config_file(config.h)
 seos_use_libs(
     SEOS_LIBS
     SEOS_CRYPTO
-    SEOS_CRYPTO_IMPL_MBEDTLS
     SEOS_FILESYSTEM_SPIFFS_LEGACY
     SEOS_KEYSTORE
 )
