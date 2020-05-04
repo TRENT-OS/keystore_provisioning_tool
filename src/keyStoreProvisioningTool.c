@@ -256,10 +256,6 @@ initialize_crypto(
     OS_Crypto_Config_t cfgCrypto =
     {
         .mode = OS_Crypto_MODE_LIBRARY_ONLY,
-        .mem = {
-            .malloc = malloc,
-            .free = free,
-        },
         .library.rng = {
             .entropy = dummyEntropyFunc,
             .context = NULL
