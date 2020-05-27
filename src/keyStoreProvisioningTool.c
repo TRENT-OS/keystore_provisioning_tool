@@ -18,7 +18,7 @@
 
 #include "AesNvm.h"
 #include "FileNVM.h"
-#include "SeosSpiffs.h"
+#include "OS_Spiffs.h"
 #include "SpiffsFileStream.h"
 #include "SpiffsFileStreamFactory.h"
 
@@ -55,7 +55,7 @@ typedef struct
     OS_Keystore_Handle_t hKeystore;
     FileNVM fileNvm;
     AesNvm aesNvm;
-    SeosSpiffs fs;
+    OS_Spiffs_t fs;
     FileStreamFactory* fileStreamFactory;
 } app_ctx_t;
 
@@ -65,7 +65,7 @@ typedef struct
 /* Private functions ---------------------------------------------------------*/
 
 //------------------------------------------------------------------------------
-static seos_err_t
+static OS_Error_t
 create_and_import_aes_key(
     app_ctx_t*   app_ctx,
     char*        keyName,
@@ -73,7 +73,7 @@ create_and_import_aes_key(
     unsigned int keyLenBits,
     char*        keyBytes)
 {
-    seos_err_t ret;
+    OS_Error_t ret;
     OS_CryptoKey_Data_t keyData;
 
     if (strlen(keyBytes) == KEY_BYTES_EMPTY_STRING_LEN
@@ -133,7 +133,7 @@ create_and_import_aes_key(
 
 
 //------------------------------------------------------------------------------
-static seos_err_t
+static OS_Error_t
 create_and_import_key_pair(
     app_ctx_t*   app_ctx,
     unsigned int importType,
@@ -142,7 +142,7 @@ create_and_import_key_pair(
     bool         isKeyExportable,
     unsigned int keyLenBits)
 {
-    seos_err_t ret;
+    OS_Error_t ret;
 
     OS_CryptoKey_Spec_t keySpec =
     {
@@ -249,7 +249,7 @@ dummyEntropyFunc(
 
 
 //------------------------------------------------------------------------------
-static seos_err_t
+static OS_Error_t
 initialize_crypto(
     app_ctx_t* app_ctx)
 {
@@ -263,7 +263,7 @@ initialize_crypto(
     };
 
     // Open local instance of Crypto API
-    seos_err_t ret = OS_Crypto_init( &(app_ctx->hCrypto), &cfgCrypto);
+    OS_Error_t ret = OS_Crypto_init( &(app_ctx->hCrypto), &cfgCrypto);
     if (ret != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoLib_init failed with error code %d!",
@@ -276,7 +276,7 @@ initialize_crypto(
 
 
 //------------------------------------------------------------------------------
-static seos_err_t
+static OS_Error_t
 prepare_keystore_NVM(
     app_ctx_t* app_ctx)
 {
@@ -305,7 +305,7 @@ prepare_keystore_NVM(
         return SEOS_ERROR_GENERIC;
     }
 
-    if (!SeosSpiffs_ctor(
+    if (!OS_Spiffs_ctor(
             &(app_ctx->fs),
             AesNvm_TO_NVM( &(app_ctx->aesNvm) ),
             NVM_PARTITION_SIZE,
@@ -315,7 +315,7 @@ prepare_keystore_NVM(
         return SEOS_ERROR_GENERIC;
     }
 
-    seos_err_t ret = SeosSpiffs_mount( &(app_ctx->fs) );
+    OS_Error_t ret = OS_Spiffs_mount( &(app_ctx->fs) );
     if (ret != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: spiffs mount failed with error code %d!",
@@ -339,11 +339,11 @@ prepare_keystore_NVM(
 
 
 //------------------------------------------------------------------------------
-static seos_err_t
+static OS_Error_t
 initializeApp(
     app_ctx_t* app_ctx)
 {
-    seos_err_t ret;
+    OS_Error_t ret;
 
     ret = initialize_crypto(app_ctx);
     if (ret != SEOS_SUCCESS)
@@ -385,7 +385,7 @@ deinitializeApp(
     app_ctx_t* app_ctx)
 {
     FileStreamFactory_dtor(app_ctx->fileStreamFactory);
-    SeosSpiffs_dtor( &(app_ctx->fs) );
+    OS_Spiffs_dtor( &(app_ctx->fs) );
     // ToDo: AesNvm_dtor
     FileNVM_dtor( FileNVM_TO_NVM( &(app_ctx->fileNvm) ) );
 
@@ -400,7 +400,7 @@ int main(
     char* argv[])
 {
     int exit_code = 0;
-    seos_err_t ret;
+    OS_Error_t ret;
     app_ctx_t app_ctx;
 
     ret = initializeApp(&app_ctx);

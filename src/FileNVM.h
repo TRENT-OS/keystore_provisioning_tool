@@ -1,13 +1,14 @@
 /**
- * @addtogroup SEOS
+ * @addtogroup OS
  * @{
  *
  * @file FileNVM.h
  *
  * @brief a implementation of the LibMem/Nvm.h interface using the proxy
- *  NVM. The seos-linux proxy application provides facilities (like NVM or
- *  network sockets) that seos for one reason or another cannot provide natively
- *  . The seos-linux communication happens on a channel like a serial port.
+ *  NVM. The linux proxy application provides facilities (like NVM or
+ *  network sockets) that the current state of the OS for one reason or another
+ *  cannot provide natively. The OS-linux communication happens on a channel
+ *  like a serial port.
  *
  * Copyright (C) 2019, Hensoldt Cyber GmbH
  */
