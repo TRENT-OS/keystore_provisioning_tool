@@ -12,15 +12,15 @@ include(${OS_SDK_SOURCE_PATH}/CMakeLists.txt)
 seos_set_config_file(config.h)
 
 seos_use_libs(
-    SEOS_LIBS
-    SEOS_CRYPTO
-    SEOS_FILESYSTEM_SPIFFS_LEGACY
-    SEOS_KEYSTORE
+    OS_LIBS
+    OS_CRYPTO
+    OS_FILESYSTEM_SPIFFS_LEGACY
+    OS_KEYSTORE
 )
 
-add_subdirectory(${SEOS_LIBS_DIR} sdk_build)
+add_subdirectory(${OS_LIBS_DIR} sdk_build)
 
-set(OS_LIBS_KEYSTORE "${SEOS_LIBS_DIR}/seos_keystore")
+set(OS_LIBS_KEYSTORE "${OS_LIBS_DIR}/seos_keystore")
 
 #-------------------------------------------------------------------------------
 
