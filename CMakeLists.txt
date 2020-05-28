@@ -9,9 +9,9 @@ set(NO_KERNEL_BUILD ON CACHE BOOL "")
 set(OS_SDK_PASSIVE_CMAKE ON)
 include(${OS_SDK_SOURCE_PATH}/CMakeLists.txt)
 
-seos_set_config_file(config.h)
+os_set_config_file(config.h)
 
-seos_use_libs(
+os_use_libs(
     OS_LIBS
     OS_CRYPTO
     OS_FILESYSTEM_SPIFFS_LEGACY
