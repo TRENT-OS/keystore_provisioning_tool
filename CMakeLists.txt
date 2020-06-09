@@ -9,7 +9,6 @@ cmake_minimum_required(VERSION 3.10)
 #-------------------------------------------------------------------------------
 # configure and use the SDK
 
-set(PAGE_SIZE_VALUE 4096 CACHE STRING "" FORCE)
 set(NO_KERNEL_BUILD ON CACHE BOOL "")
 
 set(OS_SDK_PASSIVE_CMAKE ON)
@@ -50,7 +49,7 @@ target_compile_options(${PROJECT_NAME}
 
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
-        PAGE_SIZE=${PAGE_SIZE_VALUE}
+        PAGE_SIZE=4096
 )
 
 target_link_libraries(${PROJECT_NAME}
