@@ -22,8 +22,8 @@ add_subdirectory(${OS_LIBS_DIR} sdk_build)
 
 set(OS_LIBS_KEYSTORE "${OS_LIBS_DIR}/os_keystore")
 
-#-------------------------------------------------------------------------------
 
+#-------------------------------------------------------------------------------
 project(keystore_provisioning_tool C)
 
 add_executable(${PROJECT_NAME}
@@ -54,6 +54,3 @@ target_link_libraries(${PROJECT_NAME}
     os_filesystem_spiffs_legacy
     os_keystore
 )
-
-
-
