@@ -20,7 +20,7 @@ os_use_libs(
 
 add_subdirectory(${OS_LIBS_DIR} sdk_build)
 
-set(OS_LIBS_KEYSTORE "${OS_LIBS_DIR}/seos_keystore")
+set(OS_LIBS_KEYSTORE "${OS_LIBS_DIR}/os_keystore")
 
 #-------------------------------------------------------------------------------
 
@@ -48,11 +48,11 @@ target_compile_definitions(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    seos_core_api
-    seos_libs
-    seos_crypto
-    seos_filesystem_spiffs_legacy
-    seos_keystore
+    os_core_api
+    os_libs
+    os_crypto
+    os_filesystem_spiffs_legacy
+    os_keystore
 )
 
 
