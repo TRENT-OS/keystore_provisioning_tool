@@ -42,7 +42,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_compile_options(${PROJECT_NAME}
-    PUBLIC
+    PRIVATE
         -Wall
         -Werror
 )
@@ -53,9 +53,10 @@ target_compile_definitions(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    os_core_api
-    os_libs
-    os_crypto
-    os_filesystem_spiffs_legacy
-    os_keystore
+    PRIVATE
+        os_core_api
+        os_libs
+        os_crypto
+        os_filesystem_spiffs_legacy
+        os_keystore
 )
