@@ -14,14 +14,7 @@ include(${OS_SDK_SOURCE_PATH}/CMakeLists.txt)
 
 os_set_config_file(config.h)
 
-os_use_libs(
-    OS_LIBS
-    OS_CRYPTO
-    OS_FILESYSTEM_SPIFFS_LEGACY
-    OS_KEYSTORE
-)
-
-add_subdirectory(${OS_LIBS_DIR} sdk_build)
+add_os_libs_subdirectories()
 
 
 #-------------------------------------------------------------------------------
