@@ -9,8 +9,6 @@ cmake_minimum_required(VERSION 3.10)
 #-------------------------------------------------------------------------------
 # configure and use the SDK
 
-set(NO_KERNEL_BUILD ON CACHE BOOL "")
-
 set(OS_SDK_PASSIVE_CMAKE ON)
 include(${OS_SDK_SOURCE_PATH}/CMakeLists.txt)
 
