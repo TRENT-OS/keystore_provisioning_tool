@@ -23,8 +23,6 @@ os_use_libs(
 
 add_subdirectory(${OS_LIBS_DIR} sdk_build)
 
-set(OS_LIBS_KEYSTORE "${OS_LIBS_DIR}/os_keystore")
-
 
 #-------------------------------------------------------------------------------
 project(keystore_provisioning_tool C)
