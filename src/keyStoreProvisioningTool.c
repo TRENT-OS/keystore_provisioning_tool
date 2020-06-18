@@ -238,13 +238,32 @@ create_and_import_key_pair(
 
 
 //------------------------------------------------------------------------------
-static int
-dummyEntropyFunc(
-    void*          ctx,
-    unsigned char* buf,
-    size_t         len)
+// Set up a fake CAmkES dataport so we can use the EntropySource component
+// interface on the host..
+typedef uint8_t FakeDataport_t[1024];
+static FakeDataport_t buf;
+static FakeDataport_t* dummyEntropy_dp = &buf;
+// This is the fake EntropySource driver side
+static OS_Dataport_t dataport = OS_DATAPORT_ASSIGN(dummyEntropy_dp);
+static size_t
+dummyEntropy_read(
+    const size_t len)
 {
-    return 0;
+    size_t sz;
+
+    /*
+     * TODO: Eventually we need to find a way to gather entropy on the host!
+     */
+    Debug_LOG_DEBUG("%zu bytes of entropy was requested, but we only have a "
+                    "dummy implementation!", len);
+
+    // Just memset the buffer to zero
+    sz = OS_Dataport_getSize(dataport);
+    sz = len > sz ? sz : len;
+    memset(OS_Dataport_getBuf(dataport), 0x00, sz);
+
+    // Return how many bytes we could handle
+    return sz;
 }
 
 
@@ -256,10 +275,8 @@ initialize_crypto(
     OS_Crypto_Config_t cfgCrypto =
     {
         .mode = OS_Crypto_MODE_LIBRARY_ONLY,
-        .library.rng = {
-            .entropy = dummyEntropyFunc,
-            .context = NULL
-        }
+        .library.entropy = OS_CRYPTO_ASSIGN_EntropySource(dummyEntropy_read,
+                                                          dummyEntropy_dp),
     };
 
     // Open local instance of Crypto API
