@@ -242,27 +242,33 @@ create_and_import_key_pair(
 // interface on the host..
 typedef uint8_t FakeDataport_t[1024];
 static FakeDataport_t buf;
-static FakeDataport_t* dummyEntropy_dp = &buf;
+static FakeDataport_t* hostEntropy_dp = &buf;
 // This is the fake EntropySource driver side
-static OS_Dataport_t dataport = OS_DATAPORT_ASSIGN(dummyEntropy_dp);
+static OS_Dataport_t dataport = OS_DATAPORT_ASSIGN(hostEntropy_dp);
 static size_t
-dummyEntropy_read(
+HostEntropy_read(
     const size_t len)
 {
+    FILE* fp;
     size_t sz;
 
-    /*
-     * TODO: Eventually we need to find a way to gather entropy on the host!
-     */
-    Debug_LOG_DEBUG("%zu bytes of entropy was requested, but we only have a "
-                    "dummy implementation!", len);
-
-    // Just memset the buffer to zero
+    // Make sure we don't exceed the buffer size
     sz = OS_Dataport_getSize(dataport);
     sz = len > sz ? sz : len;
-    memset(OS_Dataport_getBuf(dataport), 0x00, sz);
 
-    // Return how many bytes we could handle
+    // Since the KPT is built on the host, we *should* have /dev/urandom
+    // available..
+    if ((fp = fopen("/dev/urandom", "r")) != NULL)
+    {
+        sz = fread(OS_Dataport_getBuf(dataport), 1, sz, fp);
+        fclose(fp);
+    }
+    else
+    {
+        Debug_LOG_ERROR("Failed to open /dev/urandom");
+        sz = 0;
+    }
+
     return sz;
 }
 
@@ -275,8 +281,8 @@ initialize_crypto(
     OS_Crypto_Config_t cfgCrypto =
     {
         .mode = OS_Crypto_MODE_LIBRARY_ONLY,
-        .library.entropy = OS_CRYPTO_ASSIGN_EntropySource(dummyEntropy_read,
-                                                          dummyEntropy_dp),
+        .library.entropy = OS_CRYPTO_ASSIGN_EntropySource(HostEntropy_read,
+                                                          hostEntropy_dp),
     };
 
     // Open local instance of Crypto API
