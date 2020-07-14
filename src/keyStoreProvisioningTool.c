@@ -53,7 +53,7 @@ static OS_Crypto_Config_t cfgCrypto =
 extern FakeDataport_t* hostStorage_dp;
 static OS_FileSystem_Config_t cfgFs =
 {
-    .type = OS_FileSystem_Type_LITTLEFS,
+    .type = OS_FileSystem_Type_FATFS,
     .size = OS_FileSystem_STORAGE_MAX,
     .storage = OS_FILESYSTEM_ASSIGN_Storage(
         HostStorage,
