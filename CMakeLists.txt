@@ -22,7 +22,6 @@ project(keystore_provisioning_tool C)
 
 add_executable(${PROJECT_NAME}
     src/keyStoreProvisioningTool.c
-    src/FileNVM.c
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -36,16 +35,11 @@ target_compile_options(${PROJECT_NAME}
         -Werror
 )
 
-target_compile_definitions(${PROJECT_NAME}
-    PRIVATE
-        PAGE_SIZE=4096
-)
-
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         os_core_api
         os_libs
         os_crypto
-        os_filesystem_spiffs_legacy
+        os_filesystem
         os_keystore
 )

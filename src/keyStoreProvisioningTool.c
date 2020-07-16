@@ -1,37 +1,23 @@
-/**
- * @addtogroup CryptoApi_Tests
- * @{
- *
- * @file testRunner.c
- *
- * @brief top level test for the crypto API and the key store API
- *
- * Copyright (C) 2019, Hensoldt Cyber GmbH
+/*
+ * Copyright (C) 2019-2020, Hensoldt Cyber GmbH
  */
-
-#include "config.h"
 
 #include "OS_Keystore.h"
 #include "OS_Crypto.h"
+#include "OS_FileSystem.h"
+
+#include "LibHost/HostEntropy.h"
+#include "LibHost/HostStorage.h"
 
 #include "LibDebug/Debug.h"
 
-#include "AesNvm.h"
-#include "FileNVM.h"
-#include "OS_Spiffs.h"
-#include "SpiffsFileStream.h"
-#include "SpiffsFileStreamFactory.h"
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 /* Defines -------------------------------------------------------------------*/
-#define NVM_PARTITION_SIZE          (1024*128)
-#define NVM_PARTITION_NAME          "nvm_06"
-
-#define NVM_CHANNEL_NUMBER          (6)
 #define KEY_STORE_INSTANCE_NAME     "KeyStore1"
-
 #define KEY_BYTES_EMPTY_STRING      "0"
 #define KEY_BYTES_EMPTY_STRING_LEN  1
 
@@ -53,14 +39,29 @@ typedef struct
 {
     OS_Crypto_Handle_t hCrypto;
     OS_Keystore_Handle_t hKeystore;
-    FileNVM fileNvm;
-    AesNvm aesNvm;
-    OS_Spiffs_t fs;
-    FileStreamFactory* fileStreamFactory;
+    OS_FileSystem_Handle_t hFs;
 } app_ctx_t;
 
+extern FakeDataport_t* hostEntropy_dp;
+static OS_Crypto_Config_t cfgCrypto =
+{
+    .mode = OS_Crypto_MODE_LIBRARY_ONLY,
+    .library.entropy = OS_CRYPTO_ASSIGN_EntropySource(
+        HostEntropy_read,
+        hostEntropy_dp),
+};
+extern FakeDataport_t* hostStorage_dp;
+static OS_FileSystem_Config_t cfgFs =
+{
+    .type = OS_FileSystem_Type_LITTLEFS,
+    .size = OS_FileSystem_STORAGE_MAX,
+    .storage = OS_FILESYSTEM_ASSIGN_Storage(
+        HostStorage,
+        hostStorage_dp),
+};
+
 /* Macros --------------------------------------------------------------------*/
-#define LEN_BITS_TO_BYTES(lenBits)  (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
+#define LEN_BITS_TO_BYTES(lenBits)  (lenBits / 8 + ((lenBits % 8) ? 1 : 0))
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -124,7 +125,7 @@ create_and_import_aes_key(
               sizeof(keyData));
     if (OS_SUCCESS != ret)
     {
-        Debug_LOG_DEBUG("SeosKeyStoreApi_importKey failed with err %d", ret);
+        Debug_LOG_DEBUG("OS_Keystore_storeKey failed with err %d", ret);
         return OS_ERROR_GENERIC;
     }
 
@@ -211,7 +212,7 @@ create_and_import_key_pair(
               sizeof(keyData));
     if (OS_SUCCESS != ret)
     {
-        Debug_LOG_DEBUG("SeosKeyStoreApi_importKey failed with err %d", ret);
+        Debug_LOG_DEBUG("OS_Keystore_storeKey failed with err %d", ret);
         return OS_ERROR_GENERIC;
     }
 
@@ -229,131 +230,7 @@ create_and_import_key_pair(
               sizeof(keyData));
     if (OS_SUCCESS != ret)
     {
-        Debug_LOG_DEBUG("SeosKeyStoreApi_importKey failed with err %d", ret);
-        return OS_ERROR_GENERIC;
-    }
-
-    return OS_SUCCESS;
-}
-
-
-//------------------------------------------------------------------------------
-// Set up a fake CAmkES dataport so we can use the EntropySource component
-// interface on the host..
-typedef uint8_t FakeDataport_t[1024];
-static FakeDataport_t buf;
-static FakeDataport_t* hostEntropy_dp = &buf;
-// This is the fake EntropySource driver side
-static OS_Dataport_t dataport = OS_DATAPORT_ASSIGN(hostEntropy_dp);
-static size_t
-HostEntropy_read(
-    const size_t len)
-{
-    FILE* fp;
-    size_t sz;
-
-    // Make sure we don't exceed the buffer size
-    sz = OS_Dataport_getSize(dataport);
-    sz = len > sz ? sz : len;
-
-    // Since the KPT is built on the host, we *should* have /dev/urandom
-    // available..
-    if ((fp = fopen("/dev/urandom", "r")) != NULL)
-    {
-        sz = fread(OS_Dataport_getBuf(dataport), 1, sz, fp);
-        fclose(fp);
-    }
-    else
-    {
-        Debug_LOG_ERROR("Failed to open /dev/urandom");
-        sz = 0;
-    }
-
-    return sz;
-}
-
-
-//------------------------------------------------------------------------------
-static OS_Error_t
-initialize_crypto(
-    app_ctx_t* app_ctx)
-{
-    OS_Crypto_Config_t cfgCrypto =
-    {
-        .mode = OS_Crypto_MODE_LIBRARY_ONLY,
-        .library.entropy = OS_CRYPTO_ASSIGN_EntropySource(HostEntropy_read,
-                                                          hostEntropy_dp),
-    };
-
-    // Open local instance of Crypto API
-    OS_Error_t ret = OS_Crypto_init( &(app_ctx->hCrypto), &cfgCrypto);
-    if (ret != OS_SUCCESS)
-    {
-        Debug_LOG_ERROR("%s: SeosCryptoLib_init failed with error code %d!",
-                        __func__, ret);
-        return OS_ERROR_GENERIC;
-    }
-
-    return OS_SUCCESS;
-}
-
-
-//------------------------------------------------------------------------------
-static OS_Error_t
-prepare_keystore_NVM(
-    app_ctx_t* app_ctx)
-{
-    // create and initialize an nvm instance that writes directly to a file
-    if (!FileNVM_ctor( &(app_ctx->fileNvm), NVM_PARTITION_NAME))
-    {
-        Debug_LOG_ERROR("%s: Failed to initialize FileNVM!", __func__);
-        return OS_ERROR_GENERIC;
-    }
-
-    static const OS_CryptoKey_Data_t masterKeyData =
-    {
-        .type = OS_CryptoKey_TYPE_AES,
-        .data.aes.len = sizeof(KEYSTORE_KEY_AES) - 1,
-        .data.aes.bytes = KEYSTORE_KEY_AES
-    };
-
-    if (!AesNvm_ctor(
-            &(app_ctx->aesNvm),
-            FileNVM_TO_NVM( &(app_ctx->fileNvm) ),
-            app_ctx->hCrypto,
-            KEYSTORE_IV,
-            &masterKeyData))
-    {
-        Debug_LOG_ERROR("%s: Failed to initialize AesNvm!", __func__);
-        return OS_ERROR_GENERIC;
-    }
-
-    if (!OS_Spiffs_ctor(
-            &(app_ctx->fs),
-            AesNvm_TO_NVM( &(app_ctx->aesNvm) ),
-            NVM_PARTITION_SIZE,
-            0))
-    {
-        Debug_LOG_ERROR("%s: Failed to initialize spiffs!", __func__);
-        return OS_ERROR_GENERIC;
-    }
-
-    OS_Error_t ret = OS_Spiffs_mount( &(app_ctx->fs) );
-    if (ret != OS_SUCCESS)
-    {
-        Debug_LOG_ERROR("%s: spiffs mount failed with error code %d!",
-                        __func__, ret);
-
-        return OS_ERROR_GENERIC;
-    }
-
-    app_ctx->fileStreamFactory = SpiffsFileStreamFactory_TO_FILE_STREAM_FACTORY(
-                                     SpiffsFileStreamFactory_getInstance(
-                                         &(app_ctx->fs)));
-    if (app_ctx->fileStreamFactory == NULL)
-    {
-        Debug_LOG_ERROR("%s: Failed to get the SpiffsFileStreamFactory instance!",
-                        __func__);
+        Debug_LOG_DEBUG("OS_Keystore_storeKey failed with err %d", ret);
         return OS_ERROR_GENERIC;
     }
 
@@ -368,37 +245,58 @@ initializeApp(
 {
     OS_Error_t ret;
 
-    ret = initialize_crypto(app_ctx);
+    // Open local instance of Crypto API
+    ret = OS_Crypto_init( &(app_ctx->hCrypto), &cfgCrypto);
     if (ret != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: initialize_crypto failed with error code %d!",
+        Debug_LOG_ERROR("OS_Crypto_init failed with error code %d!", ret);
+        return ret;
+    }
+
+    // Open local instance of FS
+    ret = OS_FileSystem_init(&app_ctx->hFs, &cfgFs);
+    if (ret != OS_SUCCESS)
+    {
+        Debug_LOG_ERROR("OS_FileSystem_init() failed with %d", ret);
+        return ret;
+    }
+
+    // Try mounting, if it fails we format the disk again and try another time
+    ret = OS_FileSystem_mount(app_ctx->hFs);
+    if (ret != OS_SUCCESS)
+    {
+        Debug_LOG_INFO("Mounting fileystem failed, formatting the storage now");
+        ret = OS_FileSystem_format(app_ctx->hFs);
+        if (ret != OS_SUCCESS)
+        {
+            Debug_LOG_ERROR("OS_FileSystem_format() failed with %d", ret);
+            return ret;
+        }
+        ret = OS_FileSystem_mount(app_ctx->hFs);
+        if (ret != OS_SUCCESS)
+        {
+            Debug_LOG_ERROR("OS_FileSystem_mount() finally failed with %d", ret);
+            return ret;
+        }
+    }
+    else
+    {
+        Debug_LOG_INFO("Mounted existing fileystem");
+    }
+
+    // Setup keystore
+    ret = OS_Keystore_init(&app_ctx->hKeystore,
+                           app_ctx->hFs,
+                           app_ctx->hCrypto,
+                           KEY_STORE_INSTANCE_NAME);
+    if (ret != OS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: OS_Keystore_init failed with error code %d!",
                         __func__, ret);
         return OS_ERROR_GENERIC;
     }
 
-    // prepave NVM subsystem for keystore
-    ret = prepare_keystore_NVM(app_ctx);
-    if (ret != OS_SUCCESS)
-    {
-        Debug_LOG_ERROR("%s: prepare_keystore_NVM failed with error code %d!",
-                        __func__, ret);
-        return OS_ERROR_GENERIC;
-    }
-
-    // setup keystore with fielstream based on NVM subsystem
-    ret = OS_Keystore_init(
-              &app_ctx->hKeystore,
-              app_ctx->fileStreamFactory,
-              app_ctx->hCrypto,
-              KEY_STORE_INSTANCE_NAME);
-    if (ret != OS_SUCCESS)
-    {
-        Debug_LOG_ERROR("%s: SeosKeyStore_init failed with error code %d!",
-                        __func__, ret);
-        return OS_ERROR_GENERIC;
-    }
-
-    return OS_SUCCESS;
+    return ret;
 }
 
 
@@ -407,12 +305,9 @@ static void
 deinitializeApp(
     app_ctx_t* app_ctx)
 {
-    FileStreamFactory_dtor(app_ctx->fileStreamFactory);
-    OS_Spiffs_dtor( &(app_ctx->fs) );
-    // ToDo: AesNvm_dtor
-    FileNVM_dtor( FileNVM_TO_NVM( &(app_ctx->fileNvm) ) );
-
     OS_Keystore_free(app_ctx->hKeystore);
+    OS_FileSystem_unmount(app_ctx->hFs);
+    OS_FileSystem_free(app_ctx->hFs);
     OS_Crypto_free(app_ctx->hCrypto);
 }
 
