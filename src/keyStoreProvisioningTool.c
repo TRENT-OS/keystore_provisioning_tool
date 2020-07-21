@@ -46,7 +46,7 @@ extern FakeDataport_t* hostEntropy_dp;
 static OS_Crypto_Config_t cfgCrypto =
 {
     .mode = OS_Crypto_MODE_LIBRARY_ONLY,
-    .library.entropy = OS_CRYPTO_ASSIGN_EntropySource(
+    .library.entropy = OS_CRYPTO_ASSIGN_Entropy(
         HostEntropy,
         hostEntropy_dp),
 };
