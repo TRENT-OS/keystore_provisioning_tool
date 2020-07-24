@@ -1,4 +1,4 @@
-# keystore\_provisioning\_tool
+# Keystore Provisioning Tool
 
 A tool used to create an image that contains a valid keystore with already imported
 keys and ready to be used by the application.
