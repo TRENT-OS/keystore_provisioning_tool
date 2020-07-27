@@ -54,7 +54,7 @@ extern FakeDataport_t* hostStorage_dp;
 static OS_FileSystem_Config_t cfgFs =
 {
     .type = OS_FileSystem_Type_FATFS,
-    .size = OS_FileSystem_STORAGE_MAX,
+    .size = OS_FileSystem_USE_STORAGE_MAX,
     .storage = IF_OS_STORAGE_ASSIGN(
         HostStorage,
         hostStorage_dp),
