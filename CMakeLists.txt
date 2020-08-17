@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 3.10)
 set(OS_SDK_PASSIVE_CMAKE ON)
 include("${OS_SDK_SOURCE_PATH}/CMakeLists.txt")
 
-os_set_config_file("config.h")
+os_set_config_file("system_config.h" CREATE_CONFIG_PROJECT)
 
 add_os_libs_subdirectories()
 
@@ -24,11 +24,6 @@ add_executable(${PROJECT_NAME}
     src/keyStoreProvisioningTool.c
 )
 
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}  # for config.h
-)
-
 target_compile_options(${PROJECT_NAME}
     PRIVATE
         -Wall
@@ -37,6 +32,7 @@ target_compile_options(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
+        system_config
         os_core_api
         os_libs
         os_crypto
