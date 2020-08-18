@@ -70,7 +70,7 @@ static OS_Error_t
 create_and_import_aes_key(
     app_ctx_t*   app_ctx,
     char*        keyName,
-    bool         isKeyExportable,
+    bool         keepLocal,
     unsigned int keyLenBits,
     char*        keyBytes)
 {
@@ -80,14 +80,14 @@ create_and_import_aes_key(
     if (strlen(keyBytes) == KEY_BYTES_EMPTY_STRING_LEN
         && !strncmp(keyBytes, KEY_BYTES_EMPTY_STRING, KEY_BYTES_EMPTY_STRING_LEN))
     {
-        Debug_LOG_DEBUG("\nGenerating AES key:\n   key name = %s\n   key length = %u\n   key exportable = %u\n\n",
-                        keyName, keyLenBits, isKeyExportable);
+        Debug_LOG_DEBUG("\nGenerating AES key:\n   key name = %s\n   key length = %u\n   key local = %u\n\n",
+                        keyName, keyLenBits, keepLocal);
 
         OS_CryptoKey_Spec_t keySpec =
         {
             .type = OS_CryptoKey_SPECTYPE_BITS,
             .key.type = OS_CryptoKey_TYPE_AES,
-            .key.attribs.exportable = isKeyExportable,
+            .key.attribs.keepLocal = keepLocal,
             .key.params.bits = keyLenBits
         };
 
@@ -109,11 +109,11 @@ create_and_import_aes_key(
     }
     else
     {
-        Debug_LOG_DEBUG("\nImporting AES key:\n   key name = %s\n   key length = %u\n   key exportable = %u\n   key bytes = %s\n\n",
-                        keyName, keyLenBits, isKeyExportable, keyBytes);
+        Debug_LOG_DEBUG("\nImporting AES key:\n   key name = %s\n   key length = %u\n   key local = %u\n   key bytes = %s\n\n",
+                        keyName, keyLenBits, keepLocal, keyBytes);
 
         keyData.type = OS_CryptoKey_TYPE_AES;
-        keyData.attribs.exportable = isKeyExportable;
+        keyData.attribs.keepLocal = keepLocal;
         memcpy(keyData.data.aes.bytes, keyBytes, LEN_BITS_TO_BYTES(keyLenBits));
         keyData.data.aes.len = LEN_BITS_TO_BYTES(keyLenBits);
     }
@@ -140,7 +140,7 @@ create_and_import_key_pair(
     unsigned int importType,
     char*        keyNamePrv,
     char*        keyNamePub,
-    bool         isKeyExportable,
+    bool         keepLocal,
     unsigned int keyLenBits)
 {
     OS_Error_t ret;
@@ -148,27 +148,27 @@ create_and_import_key_pair(
     OS_CryptoKey_Spec_t keySpec =
     {
         .type = OS_CryptoKey_SPECTYPE_BITS,
-        .key.attribs.exportable = isKeyExportable,
+        .key.attribs.keepLocal = keepLocal,
         .key.params.bits = keyLenBits
     };
 
     switch (importType)
     {
     case RSA_KEY_PAIR:
-        Debug_LOG_DEBUG("\nGenerating RSA key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key exportable = %u\n\n",
-                        keyNamePrv, keyNamePub, keyLenBits, isKeyExportable);
+        Debug_LOG_DEBUG("\nGenerating RSA key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key local = %u\n\n",
+                        keyNamePrv, keyNamePub, keyLenBits, keepLocal);
         keySpec.key.type = OS_CryptoKey_TYPE_RSA_PRV;
         break;
 
     case DH_KEY_PAIR:
-        Debug_LOG_DEBUG("\nGenerating DH key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key exportable = %u\n\n",
-                        keyNamePrv, keyNamePub, keyLenBits, isKeyExportable);
+        Debug_LOG_DEBUG("\nGenerating DH key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key local = %u\n\n",
+                        keyNamePrv, keyNamePub, keyLenBits, keepLocal);
         keySpec.key.type = OS_CryptoKey_TYPE_DH_PRV;
         break;
 
     case SECP256R1_KEY_PAIR:
-        Debug_LOG_DEBUG("\nGenerating SECP256r1 key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key exportable = %u\n\n",
-                        keyNamePrv, keyNamePub, keyLenBits, isKeyExportable);
+        Debug_LOG_DEBUG("\nGenerating SECP256r1 key pair:\n   private key name = %s\n   public key name = %s\n   key length = %u\n   key local = %u\n\n",
+                        keyNamePrv, keyNamePub, keyLenBits, keepLocal);
         keySpec.key.type = OS_CryptoKey_TYPE_SECP256R1_PRV;
         break;
 
@@ -349,14 +349,14 @@ int main(
         }
 
         char* keyName = argv[2];
-        bool isKeyExportable = atoi(argv[3]);
+        bool keepLocal = atoi(argv[3]);
         unsigned int keyLenBits = atoi(argv[4]);
         char* keyBytes = argv[5];
 
         ret = create_and_import_aes_key(
                   &app_ctx,
                   keyName,
-                  isKeyExportable,
+                  keepLocal,
                   keyLenBits,
                   keyBytes);
         if (ret != OS_SUCCESS)
@@ -378,7 +378,7 @@ int main(
 
         char* keyNamePrv = argv[2];
         char* keyNamePub = argv[3];
-        bool isKeyExportable = atoi(argv[4]);
+        bool keepLocal = atoi(argv[4]);
         unsigned int keyLenBits = atoi(argv[5]);
 
         ret = create_and_import_key_pair(
@@ -386,7 +386,7 @@ int main(
                   importType,
                   keyNamePrv,
                   keyNamePub,
-                  isKeyExportable,
+                  keepLocal,
                   keyLenBits);
         if (ret != OS_SUCCESS)
         {
