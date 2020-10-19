@@ -45,7 +45,7 @@ typedef struct
 extern FakeDataport_t* hostEntropy_dp;
 static OS_Crypto_Config_t cfgCrypto =
 {
-    .mode = OS_Crypto_MODE_LIBRARY_ONLY,
+    .mode = OS_Crypto_MODE_LIBRARY,
     .entropy = IF_OS_ENTROPY_ASSIGN(
         HostEntropy,
         hostEntropy_dp),
