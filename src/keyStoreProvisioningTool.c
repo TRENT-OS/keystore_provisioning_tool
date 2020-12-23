@@ -6,10 +6,10 @@
 #include "OS_Crypto.h"
 #include "OS_FileSystem.h"
 
-#include "LibHost/HostEntropy.h"
-#include "LibHost/HostStorage.h"
+#include "lib_host/HostEntropy.h"
+#include "lib_host/HostStorage.h"
 
-#include "LibDebug/Debug.h"
+#include "lib_debug/Debug.h"
 
 #include <stdio.h>
 #include <stdlib.h>
