@@ -42,22 +42,22 @@ typedef struct
     OS_FileSystem_Handle_t hFs;
 } app_ctx_t;
 
-extern FakeDataport_t* hostEntropy_dp;
+extern FakeDataport_t* hostEntropy_port;
 static OS_Crypto_Config_t cfgCrypto =
 {
     .mode = OS_Crypto_MODE_LIBRARY,
     .entropy = IF_OS_ENTROPY_ASSIGN(
         HostEntropy,
-        hostEntropy_dp),
+        hostEntropy_port),
 };
-extern FakeDataport_t* hostStorage_dp;
+extern FakeDataport_t* hostStorage_port;
 static OS_FileSystem_Config_t cfgFs =
 {
     .type = OS_FileSystem_Type_FATFS,
     .size = OS_FileSystem_USE_STORAGE_MAX,
     .storage = IF_OS_STORAGE_ASSIGN(
         HostStorage,
-        hostStorage_dp),
+        hostStorage_port),
 };
 
 /* Macros --------------------------------------------------------------------*/
