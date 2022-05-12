@@ -1,28 +1,17 @@
 #
 # Key Provisioning Tool
 #
-# Copyright (C) 2019-2020, HENSOLDT Cyber GmbH
+# Copyright (C) 2019-2022, HENSOLDT Cyber GmbH
 #
 
 cmake_minimum_required(VERSION 3.10)
 
 #-------------------------------------------------------------------------------
-# configure and use the SDK
-
-set(OS_SDK_PASSIVE_CMAKE ON)
-if (NOT OS_SDK_PATH)
-    message(FATAL_ERROR "OS_SDK_PATH not set")
-endif()
-if (NOT EXISTS "${OS_SDK_PATH}")
-    message(FATAL_ERROR "OS_SDK_PATH not found: ${OS_SDK_PATH}")
-endif()
-include("${OS_SDK_PATH}/CMakeLists.txt")
-
-
-os_set_config_file("system_config.h" CREATE_CONFIG_PROJECT)
-
-add_subdirectory("${OS_SDK_DIR}/os_core_api" "os_core_api")
-add_os_libs_subdirectories()
+# use the SDK
+find_package("os-sdk" REQUIRED)
+os_sdk_create_config_project("system_config" "config.h")
+os_sdk_import_core_api()
+os_sdk_import_libs()
 
 
 #-------------------------------------------------------------------------------
